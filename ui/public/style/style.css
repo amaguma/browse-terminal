@@ -1,0 +1,46 @@
+:root {
+    --color--background: #1e1a1a;
+    --color--initial-entry: #4ae842;
+    --color--path: #2C2CFF;
+}
+
+body {
+    background-color:  var(--color--background);
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    line-height: 17px;
+    letter-spacing: 0.08em;
+    color: white;
+}
+
+.container {
+    margin: 0;
+    max-width: 100%;
+}
+
+.work__line {
+    padding: 14px 0px;
+    display: flex;
+    cursor: context-menu;
+}
+
+.initial__entry {
+    color: var(--color--initial-entry);
+}
+
+.input {
+    height: 22px;
+    min-width: 4em;
+    border: none;
+    color: white;
+    padding: 0 2px 6px 3px;
+    outline: none;
+}
+
+.breadcrumb__wrapper > span {
+    padding-right: 1px;
+}
+
+.path {
+    color: var(--color--path);
+}
