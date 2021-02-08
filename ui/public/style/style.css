@@ -19,7 +19,7 @@ body {
 }
 
 .work__line {
-    padding: 14px 0px;
+    padding-top: 7px;
     display: flex;
     cursor: context-menu;
 }

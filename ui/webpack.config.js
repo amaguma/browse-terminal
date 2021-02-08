@@ -1,7 +1,7 @@
 const path = require('path')
 
 module.exports = {
-    entry: './dist/Terminal.js',
+    entry: './dist/index.js',
     module: {
         rules: []
     },

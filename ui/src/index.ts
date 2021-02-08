@@ -28,23 +28,34 @@ initialFilesystem
 var terminal = new Terminal(initialFilesystem);
 let str = 'mkdir -p NewDIR1/NewDIR12/NewDIR123 NewDIR2/NewDIR21/NewDIR213';
 const elems = Parser.parse(str);
-let str2 = 'ls -l -Q >> file1.txt';
-const elems2 = Parser.parse(str2);
-const elems11 = Parser.parse('cat -n -E file1.txt')
-let str3 = 'cd NewDIR1/NewDIR12';
-const elems3 = Parser.parse(str3);
-const elems10 = Parser.parse('ls -l > file1.txt')
-const elems12 = Parser.parse('ls -l')
+// let str2 = 'ls -l -Q >> file1.txt';
+// const elems2 = Parser.parse(str2);
+// const elems11 = Parser.parse('cat -n -E file1.txt')
+// let str3 = 'cd NewDIR1/NewDIR12';
+// const elems3 = Parser.parse(str3);
+// const elems10 = Parser.parse('ls -l > file1.txt')
+// const elems12 = Parser.parse('ls -l')
+
+
 
 // client.mkdir(['NewDIR1/NewDIR12/NewDIR123', 'NewDIR2/NewDIR21/NewDIR213'], flags);
 terminal.runCommand(elems);
-terminal.runCommand(elems2);
-terminal.runCommand(elems11);
-terminal.runCommand(elems3);
-terminal.runCommand(elems2);
-terminal.runCommand(elems10);
-terminal.runCommand(elems12);
-terminal.runCommand(elems11);
+// terminal.runCommand(elems2);
+// terminal.runCommand(elems11);
+// terminal.runCommand(elems3);
+// terminal.runCommand(elems2);
+// terminal.runCommand(elems10);
+// terminal.runCommand(elems12);
+// terminal.runCommand(elems11);
+
+terminal.sendCommand(document.body)
+
+// const term = document.getElementById('terminal');
+// if (term != null) {
+//   terminal.addWorkLine(term)
+// } else {
+//   console.log('ЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫЫы')
+// }
 // terminal.runCommand(elems3);
 // terminal.runCommand(elems4);
 // terminal.runCommand(elems2);
@@ -126,6 +137,5 @@ console.log('end')
 // console.log(tmp2);
 
 
-const tmp = '123';
-const tmp2 = tmp.split('\n');
-console.log(tmp2);
+const line = ['ls', '-']
+console.log(Parser.parseFlags(line, ['1','l','Q','t','s', 'S']))

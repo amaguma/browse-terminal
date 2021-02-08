@@ -16,7 +16,7 @@ class Parser {
         const kw = /\s*(cd|mkdir|rmdir|touch|rm|ls|pwd|cat|echo|help)\s*/;
         const flags = /\s*-(p|d|r|f|v|c|Q|1|s|S|t|l|E|n|b)+\s*/g;
         const text = /\s*('[^\']+')\s*/;
-        const path = /\s*([A-Za-z][A-Za-z0-9_\-\.]*\/?)+\s*/g;
+        const path = /\s*([A-Za-z\.\-][A-Za-z0-9_\-\.]*\/?)+\s*/g;
         const re = /[^>]*/;
         let str = line;
         let otherStr = '';
@@ -41,6 +41,8 @@ class Parser {
             flagsElem = '-' + flagsElem.split('-').join('');
             args.push(flagsElem);
             str = str.replace(flags, '');
+        } else {
+            args.push('-');
         }
         if (args[0] == 'echo') {
             elem = str.match(re);

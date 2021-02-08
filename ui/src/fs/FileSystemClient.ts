@@ -26,6 +26,7 @@ class FileSystemClient {
     }
 
     cd(pathTo: string[]): boolean {
+        const currentDir = this.pointer;
         if (pathTo.length > 0) {
             if (pathTo.length == 1 && pathTo[0] == '-') {
                 this.pointer = this.home.historyDir.getOldPointer();
@@ -34,17 +35,23 @@ class FileSystemClient {
                 let position = 0;
                 do {
                    if (pathTo[position] == '..') {
-                       this.pointer = this.pointer.parentDir;
+                        if (this.pointer == this.home.getRoot()) {
+                            this.pointer == this.home.getRoot();
+                        } else {
+                            this.pointer = this.pointer.parentDir;
+                        }
                     } else {
                         if (pathTo[position] == 'home' && position == 0) {
                             this.pointer = this.home.getRoot();
                         } else {
                             childDir = this.pointer.get(pathTo[position]);
                             if (!childDir) {
-                                throw new Error(`${pathTo} not found`);
+                                this.pointer = currentDir;
+                                throw new Error(`${pathTo.join('/')} not found`);
                             }
                             if (!(childDir instanceof FsDir)) {
-                                throw new Error(`${pathTo} is not a directory`);
+                                this.pointer = currentDir;
+                                throw new Error(`${pathTo.join('/')} is not a directory`);
                             }
                             this.pointer = childDir;
                         }
@@ -214,7 +221,7 @@ class FileSystemClient {
         return path;
     }
 
-    rm(path: string[], flags: Set<string>): boolean {
+    rm(path: string[], flags: Set<string>) {
         const pathTo: string[][] =  Parser.parsePath(path); 
         if (pathTo.length == 0) {
             throw new Error('Invalid input')
@@ -250,9 +257,13 @@ class FileSystemClient {
                     position++;
                     this.pointer = currentDir;
                 }
+                for (let i = 0; i < str.length; i++) {
+                    str[i] = 'removed ' + str[i];
+                }
                 str.map(item => {
-                    console.log('removed ' + item);
+                    console.log(item);
                 });
+                return str;
             } else if (this.hasAll(flags, 'r', 'v') && flags.size == 2) {
                 const str: string[] = [];
                 while(position < pathTo.length) {
@@ -268,9 +279,13 @@ class FileSystemClient {
                     position++;
                     this.pointer = currentDir;
                 }
+                for (let i = 0; i < str.length; i++) {
+                    str[i] = 'removed ' + str[i];
+                }
                 str.map(item => {
-                    console.log('removed ' + item);
+                    console.log(item);
                 });
+                return str;
             } else if (this.hasAll(flags, 'r', 'f') && flags.size == 2) {
                 const str: string[] = [];
                 while(position < pathTo.length) {
@@ -303,9 +318,13 @@ class FileSystemClient {
                     position++;
                     this.pointer = currentDir;
                 }
+                for (let i = 0; i < str.length; i++) {
+                    str[i] = 'removed ' + str[i];
+                }
                 str.map(item => {
-                    console.log('removed ' + item);
+                    console.log(item);
                 });
+                return str;
             } else if (this.hasAll(flags, 'r') && flags.size == 1) {
                 const str: string[] = [];
                 while(position < pathTo.length) {
@@ -342,9 +361,13 @@ class FileSystemClient {
                     position++;
                     this.pointer = currentDir;
                 }
+                for (let i = 0; i < str.length; i++) {
+                    str[i] = 'removed ' + str[i];
+                }
                 str.map(item => {
-                    console.log('removed ' + item);
+                    console.log(item);
                 });
+                return str;
             } else if (this.hasAll(flags, 'f') && flags.size == 1) {
                 const str: string[] = [];
                 while(position < pathTo.length) {
@@ -367,7 +390,6 @@ class FileSystemClient {
                 throw new Error('Invalid flag');
             }
         }
-        return true;
     }
 
     ls(flags: Set<string>, pathTo?: string[]) {
@@ -553,7 +575,7 @@ class FileSystemClient {
                 file.setContent(str);
             }
             if (counter == 2) {
-                file.concatContent(str);
+                file.concatContent('\n' + str);
             }
         }
         this.messageErrorFile(path, file);
