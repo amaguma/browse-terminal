@@ -575,7 +575,11 @@ class FileSystemClient {
                 file.setContent(str);
             }
             if (counter == 2) {
-                file.concatContent('\n' + str);
+                if (file.content != '') {
+                    file.concatContent('\n' + str);
+                } else {
+                    file.concatContent(str);
+                }
             }
         }
         this.messageErrorFile(path, file);

@@ -49,6 +49,7 @@ terminal.runCommand(elems);
 // terminal.runCommand(elems11);
 
 terminal.sendCommand(document.body)
+terminal.scrollCommands(document.body);
 
 // const term = document.getElementById('terminal');
 // if (term != null) {
