@@ -2,7 +2,7 @@ import { FileSystemManager } from './fs/FileSystemManager';
 import { FsFile } from './fs/FsFile';
 import { Parser } from './Parser';
 import { Terminal } from './Terminal';
-import './style.css';
+import './style/style.css';
  
 var initialFilesystem = new FileSystemManager();
 
