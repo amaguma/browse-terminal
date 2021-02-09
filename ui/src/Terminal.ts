@@ -176,7 +176,7 @@ class Terminal {
         return str;
     }
 
-    addWorkLine(terminal: HTMLElement)  {
+    addWorkLine(terminal: HTMLElement): HTMLDivElement  {
         let str = '';
         if (this.client.pwd() == '/home') {
             str = '/';
@@ -207,6 +207,7 @@ class Terminal {
         //     newInput.innerHTML = ' ';
         //     newInput.focus()
         // }       
+        return newWorkLine;
     }
 
     CommandOutput(line: string, terminal: HTMLElement) {
@@ -225,57 +226,67 @@ class Terminal {
             }
         }
     }
-    sendCommand(body: HTMLElement) {
-        body.addEventListener('keypress', (event) => {
-            if (event.code != 'Enter') return;
-            const terminal = document.getElementById('terminal');
-            if (terminal == null) {
-                return;
-            }
-            let commandInput: string | undefined;
-            const input = document.querySelector('[contenteditable=true]:last-child');
-            if (input != null) {
-                commandInput = input.textContent?.trim();
-            } 
-            if (!commandInput || commandInput == '') {
-                this.addWorkLine(terminal)
-            } else {
-                this.historyCommand.add(commandInput);
-                this.CommandOutput(commandInput, terminal);
-                this.addWorkLine(terminal);
-                console.log(this.historyCommand.getLength());
 
-            }
-            event.preventDefault();
-            return;
-        });
-        return;
-    }
-
-    scrollCommands(body: HTMLElement) {
-        if (this.historyCommand.getLength() == 0) {
-            return;
-        }
-        console.log('AAAAAAAAAAAAAAAAAAAAAAAA');
-        let index = this.historyCommand.getLength() - 1;
+    handleKeyDownEvent(body: HTMLElement) {
+        let index = this.historyCommand.getLength();
+        console.log('index222222222: ' + index);
         body.addEventListener('keydown', (event) => {
             const input = document.querySelector('[contenteditable=true]:last-child');
-            if (event.code == 'ArrowUp') {
-                if (index < 0) {
-                    index = 0;
-                }
-                input?.textContent == this.historyCommand.getElem(index);
-                index--;
-            } else if (event.code == 'ArrowDown') {
-                if (index > this.historyCommand.getLength() - 1) {
-                    index = this.historyCommand.getLength() - 1;
-                }
-                input?.textContent == this.historyCommand.getElem(index);
-                index++;
-            } else {
+            if (input == null) {
                 return;
             }
+            if (event.code == 'Enter') {
+                this.sendCommand(input);
+                index = this.historyCommand.getLength();
+            } else if (event.code == 'ArrowUp' || event.code == 'ArrowDown') {
+                event.preventDefault();
+                index = this.scrollCommand(input, event.code, index);
+            }
         });
+    }
+
+    sendCommand(input: Element) {
+        const terminal = document.getElementById('terminal');
+        if (terminal == null) {
+            return;
+        }
+        let commandInput: string | undefined;
+        
+        if (input != null) {
+            commandInput = input.textContent?.trim();
+        } 
+        let elem: HTMLDivElement;
+        if (!commandInput || commandInput == '') {
+            elem = this.addWorkLine(terminal)
+        } else {
+            this.historyCommand.add(commandInput);
+            this.CommandOutput(commandInput, terminal);
+            elem = this.addWorkLine(terminal);
+        }
+        elem.scrollIntoView();
+    }
+    
+    scrollCommand(input: Element, str: string, index: number) {
+        if (this.historyCommand.getLength() == 0) {
+            return 0;
+        }
+        console.log(this.historyCommand.getList());
+        if (str == 'ArrowUp') {
+            index--;
+            if (index < 0) {
+                index = 0;
+            }
+            input.textContent = this.historyCommand.getElem(index);
+        } else if (str == 'ArrowDown') {
+            index++;
+            if (index > this.historyCommand.getLength() - 1) {
+                index = this.historyCommand.getLength();
+                input.textContent = '';
+            } else {
+                input.textContent = this.historyCommand.getElem(index);
+            }
+        }
+        return index;
     }
 }
 
@@ -291,9 +302,15 @@ class HistoryCommand<T> {
     add(item: T) {
         if (this.lastIndex > 14) {
             this.lastIndex = 14;
+            if (this.data[this.lastIndex] == item) {
+                return;
+            }
             for(let i = 0; i < this.data.length - 1; i++) {
                 this.data[i] = this.data[i + 1];
             }
+        }
+        if (this.data[this.lastIndex - 1] == item) {
+            return;
         }
         this.data[this.lastIndex] = item;
         this.lastIndex++;
@@ -305,6 +322,10 @@ class HistoryCommand<T> {
 
     getLength(): number {
         return this.data.length;
+    }
+
+    getList() {
+        return this.data;
     }
 }
 
