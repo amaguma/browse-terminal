@@ -1,24 +1,24 @@
-  
 {
-    "compilerOptions": {
-      "allowSyntheticDefaultImports": true,
-      "target": "es2018",
-      "module": "commonjs",
-      "moduleResolution": "node",
-      "outDir": "dist",
-      "experimentalDecorators": true,
-      "emitDecoratorMetadata": true,
-      "noUnusedLocals": true,
-      "noUnusedParameters": true,
-      "strict": true,
-      "sourceMap": true,
-      "baseUrl": "./src",
-      "pretty": true
-    },
-    "include": [
-      "src/**/*.ts"
-    ],
-    "exclude": [
-      "node_modules"
-    ]
-  }
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "target": "es2018",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strict": true,
+    "sourceMap": true,
+    "baseUrl": "./src",
+    "pretty": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.css"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

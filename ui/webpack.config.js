@@ -1,14 +1,40 @@
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path')
 
 module.exports = {
-    entry: './dist/index.js',
+    entry: './src/index.ts',
     module: {
-        rules: []
+        rules: [
+            {
+                test: /\.css$/i,
+                use: [MiniCssExtractPlugin.loader, "css-loader"],
+            },
+            {
+                test: /\.ts$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
+            }
+        ]
+    },
+    resolve: {
+        extensions: ['.ts', '.js', '.css'],
     },
     output: {
-        path: path.resolve(__dirname, 'public/js'),
-        filename: 'index_bundle.js'
+        filename: 'bundle.js',
+        path: path.resolve(__dirname, 'dist'),
     },
-    plugins: [],
-    mode: process.env.NODE_ENV === 'production' ? 'production' : 'development'
+    plugins: [
+        new CleanWebpackPlugin(),
+        new MiniCssExtractPlugin(),
+        new HtmlWebpackPlugin({
+            template: path.resolve(__dirname, 'public/index.html'),
+        })
+    ],
+    mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+    devServer: {
+        open: true,
+        contentBase: './dist',
+    },
 }
