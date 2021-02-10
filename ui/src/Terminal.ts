@@ -38,13 +38,13 @@ class Terminal {
         this.inputElem.setAttribute('autocorrect', 'off');
         this.inputElem.setAttribute('autocapitalize', 'none');
         this.inputElem.setAttribute('autocomplete', 'off');
+        this.inputElem.addEventListener('blur', this.handleMouseUp)
 
         this.workLineElem.appendChild(this.pathElem);
         this.workLineElem.appendChild(this.inputElem);
         this.terminalElem.appendChild(this.workLineElem);
         document.body.appendChild(this.terminalElem);
         document.body.addEventListener('keydown', this.handleKeyDown);
-        document.body.addEventListener('mouseup', this.handleMouseUp);
         this.inputElem.focus();
     }
 
@@ -246,16 +246,8 @@ class Terminal {
         }
     }
 
-    handleMouseUp = (event: MouseEvent) => {
-        if (event.target !== this.inputElem) {
-            this.inputElem.focus();
-            const range = document.createRange();
-            range.selectNodeContents(this.inputElem);
-            range.collapse(false);
-            const selection = window.getSelection();
-            selection?.removeAllRanges();
-            selection?.addRange(range);
-        }
+    handleMouseUp = () => {
+        this.inputElem.focus();
     }
 
     sendCommand(command: string) {
