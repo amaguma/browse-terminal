@@ -1,15 +1,51 @@
-import { FileSystemClient } from './fs/FileSystemClient';
-import { FileSystemManager } from './fs/FileSystemManager';
-import { Parser } from './Parser';
-import { Pair } from './Parser';
+import {FileSystemClient} from './fs/FileSystemClient';
+import {FileSystemManager} from './fs/FileSystemManager';
+import {Parser} from './Parser';
+import {Pair} from './Parser';
 
 class Terminal {
     private client: FileSystemClient;
     private historyCommand: HistoryCommand<string>;
+    private currentHistoryIndex: number;
+    private readonly terminalElem: HTMLDivElement;
+    private readonly workLineElem: HTMLDivElement;
+    private readonly pathElem: HTMLSpanElement;
+    private readonly inputElem: HTMLSpanElement;
 
     constructor(fileSystem: FileSystemManager) {
         this.client = new FileSystemClient(fileSystem);
         this.historyCommand = new HistoryCommand();
+        this.terminalElem = document.createElement('div');
+        this.workLineElem = document.createElement('div');
+        this.pathElem = document.createElement('span');
+        this.inputElem = document.createElement('span');
+        this.currentHistoryIndex = this.historyCommand.getLength();
+        this.init();
+    }
+
+    private init() {
+        this.terminalElem.id = 'terminal';
+        this.terminalElem.className = 'container';
+
+        this.workLineElem.className = "work__line";
+        this.workLineElem.innerHTML = '<span class="initial__entry">guest:</span>';
+
+        this.pathElem.className = 'path';
+        this.setPath('/');
+
+        this.inputElem.className = 'input';
+        this.inputElem.setAttribute('contenteditable', 'true');
+        this.inputElem.setAttribute('autocorrect', 'off');
+        this.inputElem.setAttribute('autocapitalize', 'none');
+        this.inputElem.setAttribute('autocomplete', 'off');
+
+        this.workLineElem.appendChild(this.pathElem);
+        this.workLineElem.appendChild(this.inputElem);
+        this.terminalElem.appendChild(this.workLineElem);
+        document.body.appendChild(this.terminalElem);
+        document.body.addEventListener('keydown', this.handleKeyDown);
+        document.body.addEventListener('mouseup', this.handleMouseUp);
+        this.inputElem.focus();
     }
 
     runCommand(args: Pair<string>): string | undefined {
@@ -22,11 +58,11 @@ class Terminal {
                 const lastIndex = cmd.length - 1;
                 const path = cmd[lastIndex].split('/');
                 this.client.cd(path);
-            } else if (cmd.length == 2){
+            } else if (cmd.length == 2) {
                 this.client.cd([]);
             } else {
                 throw new Error('Invalid input');
-            } 
+            }
         } else if (commandName == 'mkdir') {
             if (cmd.length != 3) {
                 throw new Error('Invalid input');
@@ -46,7 +82,7 @@ class Terminal {
                 } else if (additionalArg[0] == '>') {
                     this.client.setOutputInTargetFile(additionalArg[1].split('/'), content);
                 } else {
-                    throw new Error('Invalid input'); 
+                    throw new Error('Invalid input');
                 }
             } else {
                 str = content;
@@ -70,10 +106,10 @@ class Terminal {
                 const param = cmd[2];
                 this.client.touch(path, flags, param);
             } else {
-                throw new Error('Invalid input'); 
+                throw new Error('Invalid input');
             }
         } else if (commandName == 'ls') {
-            const flags = Parser.parseFlags(cmd, ['1','l','Q','t','s', 'S']);
+            const flags = Parser.parseFlags(cmd, ['1', 'l', 'Q', 't', 's', 'S']);
             if (cmd.length == 2) {
                 const content = this.client.ls(flags).join('\n');
                 if (additionalArg.length != 0) {
@@ -82,7 +118,7 @@ class Terminal {
                     } else if (additionalArg[0] == '>') {
                         this.client.setOutputInTargetFile(additionalArg[1].split('/'), content);
                     } else {
-                        throw new Error('Invalid input'); 
+                        throw new Error('Invalid input');
                     }
                 } else {
                     str = content;
@@ -96,17 +132,17 @@ class Terminal {
                     } else if (additionalArg[0] == '>') {
                         this.client.setOutputInTargetFile(additionalArg[1].split('/'), content);
                     } else {
-                        throw new Error('Invalid input'); 
+                        throw new Error('Invalid input');
                     }
                 } else {
                     str = content;
                 }
             } else {
-                throw new Error('Invalid input'); 
+                throw new Error('Invalid input');
             }
         } else if (commandName == 'pwd') {
             if (cmd.length > 2) {
-                throw new Error('Invalid input'); 
+                throw new Error('Invalid input');
             }
             const content = this.client.pwd();
             if (additionalArg.length != 0) {
@@ -115,14 +151,14 @@ class Terminal {
                 } else if (additionalArg[0] == '>') {
                     this.client.setOutputInTargetFile(additionalArg[1].split('/'), content);
                 } else {
-                    throw new Error('Invalid input'); 
+                    throw new Error('Invalid input');
                 }
             } else {
                 str = content;
             }
         } else if (commandName == 'rm') {
             if (cmd.length != 3) {
-                throw new Error('Invalid input'); 
+                throw new Error('Invalid input');
             }
             const flags = Parser.parseFlags(cmd, ['r', 'f', 'v', 'd']);
             const path = cmd[2].split(' ');
@@ -133,14 +169,14 @@ class Terminal {
                 } else if (additionalArg[0] == '>') {
                     this.client.setOutputInTargetFile(additionalArg[1].split('/'), content);
                 } else {
-                    throw new Error('Invalid input'); 
+                    throw new Error('Invalid input');
                 }
             } else {
                 str = content;
             }
         } else if (commandName == 'cat') {
             if (cmd.length != 3) {
-                throw new Error('Invalid input'); 
+                throw new Error('Invalid input');
             }
             const flags = Parser.parseFlags(cmd, ['E', 'n', 'b']);
             const path = cmd[2].split(' ');
@@ -151,14 +187,14 @@ class Terminal {
                 } else if (additionalArg[0] == '>') {
                     this.client.setOutputInTargetFile(additionalArg[1].split('/'), content);
                 } else {
-                    throw new Error('Invalid input'); 
+                    throw new Error('Invalid input');
                 }
             } else {
                 str = content;
             }
         } else if (commandName == 'help') {
             if (cmd.length > 2) {
-                throw new Error('Invalid input'); 
+                throw new Error('Invalid input');
             }
             const content = this.client.help().join('\n');
             if (additionalArg.length != 0) {
@@ -167,7 +203,7 @@ class Terminal {
                 } else if (additionalArg[0] == '>') {
                     this.client.setOutputInTargetFile(additionalArg[1].split('/'), content);
                 } else {
-                    throw new Error('Invalid input'); 
+                    throw new Error('Invalid input');
                 }
             } else {
                 str = content;
@@ -176,117 +212,82 @@ class Terminal {
         return str;
     }
 
-    addWorkLine(terminal: HTMLElement): HTMLDivElement  {
-        let str = '';
-        if (this.client.pwd() == '/home') {
-            str = '/';
-        } else {
-            str = this.client.pwd().slice(5);
-        }
-        // const newWorkLine = document.querySelector('.work__line:last-child')?.cloneNode(true);
-        const input = document.querySelector('[contenteditable=true]:last-child');
-        if (input) {
-            input.setAttribute('contenteditable', 'false');
-        }
-        // if (newWorkLine) {
-        //     terminal.appendChild(newWorkLine);
-        // }
-        // const path = document.querySelectorAll('.path');
-        // if (path != null) {
-        //     path[path.length - 1].innerHTML = '(' + str + ')$';
-        // }
-     
-     
-        const newWorkLine = document.createElement('div');
-        newWorkLine.className = "work__line";
-        newWorkLine.innerHTML = '<span class="initial__entry">guest:</span>' + '<span class="path">' + '(' + str + ')' + '$' + '</span>' + 
-        '<span id="input" contenteditable="true" class="input" autocorrect="off" autocapitalize="none" autocomplete="off"></span>';
-        terminal.appendChild(newWorkLine);  
-        // const newInput = newWorkLine.querySelector('#input');
-        // if (newInput != null) {
-        //     newInput.innerHTML = ' ';
-        //     newInput.focus()
-        // }       
-        return newWorkLine;
-    }
-
-    CommandOutput(line: string, terminal: HTMLElement) {
+    commandOutput(line: string) {
         let output: string | undefined;
         try {
             output = this.runCommand(Parser.parse(line));
         } catch (error) {
             output = (error as Error).message;
-        }       
+        }
         if (output) {
             const outputCommand = output.split('\n');
             for (const item of outputCommand) {
-                let div = document.createElement('div');
+                const div = document.createElement('div');
                 div.innerHTML = item;
-                terminal.appendChild(div);  
+                this.terminalElem.insertBefore(div, this.workLineElem);
             }
         }
     }
 
-    handleKeyDownEvent(body: HTMLElement) {
-        let index = this.historyCommand.getLength();
-        console.log('index222222222: ' + index);
-        body.addEventListener('keydown', (event) => {
-            const input = document.querySelector('[contenteditable=true]:last-child');
-            if (input == null) {
-                return;
-            }
-            if (event.code == 'Enter') {
-                this.sendCommand(input);
-                index = this.historyCommand.getLength();
-            } else if (event.code == 'ArrowUp' || event.code == 'ArrowDown') {
-                event.preventDefault();
-                index = this.scrollCommand(input, event.code, index);
-            }
-        });
+    setPath(path: string) {
+        this.pathElem.innerText = `(${path})$`
     }
 
-    sendCommand(input: Element) {
-        const terminal = document.getElementById('terminal');
-        if (terminal == null) {
-            return;
+    handleKeyDown = (event: KeyboardEvent) => {
+        console.log('index222222222: ' + this.currentHistoryIndex);
+        if (event.code == 'Enter') {
+            event.preventDefault();
+            this.sendCommand(this.inputElem.innerText.trim());
+            this.inputElem.innerText = '';
+            this.currentHistoryIndex = this.historyCommand.getLength();
+        } else if (event.code == 'ArrowUp' || event.code == 'ArrowDown') {
+            event.preventDefault();
+            this.scrollCommand(event.code);
         }
-        let commandInput: string | undefined;
-        
-        if (input != null) {
-            commandInput = input.textContent?.trim();
-        } 
-        let elem: HTMLDivElement;
-        if (!commandInput || commandInput == '') {
-            elem = this.addWorkLine(terminal)
-        } else {
-            this.historyCommand.add(commandInput);
-            this.CommandOutput(commandInput, terminal);
-            elem = this.addWorkLine(terminal);
-        }
-        elem.scrollIntoView();
     }
-    
-    scrollCommand(input: Element, str: string, index: number) {
+
+    handleMouseUp = (event: MouseEvent) => {
+        if (event.target !== this.inputElem) {
+            this.inputElem.focus();
+            const range = document.createRange();
+            range.selectNodeContents(this.inputElem);
+            range.collapse(false);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+        }
+    }
+
+    sendCommand(command: string) {
+        this.terminalElem.insertBefore(this.workLineElem.cloneNode(true), this.workLineElem);
+        if (command !== '') {
+            this.historyCommand.add(command);
+            this.commandOutput(command);
+        }
+        const path = this.client.pwd() == '/home' ? '/' : this.client.pwd().slice(5);
+        this.setPath(path);
+    }
+
+    scrollCommand(str: string) {
         if (this.historyCommand.getLength() == 0) {
-            return 0;
+            return;
         }
         console.log(this.historyCommand.getList());
         if (str == 'ArrowUp') {
-            index--;
-            if (index < 0) {
-                index = 0;
+            this.currentHistoryIndex--;
+            if (this.currentHistoryIndex < 0) {
+                this.currentHistoryIndex = 0;
             }
-            input.textContent = this.historyCommand.getElem(index);
+            this.inputElem.innerText = this.historyCommand.getElem(this.currentHistoryIndex);
         } else if (str == 'ArrowDown') {
-            index++;
-            if (index > this.historyCommand.getLength() - 1) {
-                index = this.historyCommand.getLength();
-                input.textContent = '';
+            this.currentHistoryIndex++;
+            if (this.currentHistoryIndex > this.historyCommand.getLength() - 1) {
+                this.currentHistoryIndex = this.historyCommand.getLength();
+                this.inputElem.innerText = '';
             } else {
-                input.textContent = this.historyCommand.getElem(index);
+                this.inputElem.innerText = this.historyCommand.getElem(this.currentHistoryIndex);
             }
         }
-        return index;
     }
 }
 
@@ -305,7 +306,7 @@ class HistoryCommand<T> {
             if (this.data[this.lastIndex] == item) {
                 return;
             }
-            for(let i = 0; i < this.data.length - 1; i++) {
+            for (let i = 0; i < this.data.length - 1; i++) {
                 this.data[i] = this.data[i + 1];
             }
         }
@@ -329,4 +330,4 @@ class HistoryCommand<T> {
     }
 }
 
-export { Terminal }
+export {Terminal}

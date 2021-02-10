@@ -1,14 +1,14 @@
-import { FileSystemManager } from './fs/FileSystemManager';
-import { FsFile } from './fs/FsFile';
-import { Parser } from './Parser';
-import { Terminal } from './Terminal';
+import {FileSystemManager} from './fs/FileSystemManager';
+import {FsFile} from './fs/FsFile';
+import {Parser} from './Parser';
+import {Terminal} from './Terminal';
 import './style/style.css';
- 
+
 var initialFilesystem = new FileSystemManager();
 
 
 initialFilesystem
-  .addUnit([], new FsFile('tmp.txt', '123123123'));
+    .addUnit([], new FsFile('tmp.txt', '123123123'));
 
 // initialFilesystem
 //   .addUnit([], new FsDir('NewDIR1'));
@@ -38,7 +38,6 @@ const elems = Parser.parse(str);
 // const elems12 = Parser.parse('ls -l')
 
 
-
 // client.mkdir(['NewDIR1/NewDIR12/NewDIR123', 'NewDIR2/NewDIR21/NewDIR213'], flags);
 terminal.runCommand(elems);
 // terminal.runCommand(elems2);
@@ -48,8 +47,6 @@ terminal.runCommand(elems);
 // terminal.runCommand(elems10);
 // terminal.runCommand(elems12);
 // terminal.runCommand(elems11);
-
-terminal.handleKeyDownEvent(document.body)
 
 // const term = document.getElementById('terminal');
 // if (term != null) {
@@ -139,4 +136,4 @@ console.log('end')
 
 
 const line = ['ls', '-']
-console.log(Parser.parseFlags(line, ['1','l','Q','t','s', 'S']))
+console.log(Parser.parseFlags(line, ['1', 'l', 'Q', 't', 's', 'S']))
