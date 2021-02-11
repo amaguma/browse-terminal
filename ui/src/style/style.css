@@ -39,13 +39,17 @@ body {
     color: var(--color--initial-entry);
 }
 
-.input {
+.input__cmd, .input__param {
     height: 22px;
     min-width: 4em;
     border: none;
     color: white;
     padding: 0 2px 6px 3px;
     outline: none;
+}
+
+.input__param {
+    padding: 0;
 }
 
 .breadcrumb__wrapper > span {

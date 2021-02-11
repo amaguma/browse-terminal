@@ -38,14 +38,15 @@ class Terminal {
         this.pathElem.className = 'path';
         this.setPath('/');
 
-        this.inputElem.className = 'input';
+        this.inputElem.className = 'input__cmd';
         this.inputElem.setAttribute('contenteditable', 'true');
         this.inputElem.setAttribute('autocorrect', 'off');
         this.inputElem.setAttribute('autocapitalize', 'none');
         this.inputElem.setAttribute('autocomplete', 'off');
         this.inputElem.addEventListener('blur', this.handleMouseUpInputCmd);
 
-        this.inputParam = this.inputElem.cloneNode(true) as HTMLSpanElement;       
+        this.inputParam = this.inputElem.cloneNode(true) as HTMLSpanElement;   
+        this.inputParam.className = 'input__param'    
 
         this.workLineElem.appendChild(this.pathElem);
         this.workLineElem.appendChild(this.inputElem);
