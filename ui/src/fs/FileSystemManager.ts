@@ -1,14 +1,15 @@
 import { FsDir, FS_ROOT_NAME } from './FsDir';
 import { FsFile } from './FsFile';
+import { ListHistory } from '../ListHistory'
 
 class FileSystemManager {
     public fileSystem: Map<FsDir, Array<FsDir | FsFile>>;
     private root: FsDir;
-    public historyDir: Pair<FsDir>;
+    public historyDir: ListHistory<FsDir>;
 
     constructor() {
         this.root = new FsDir(FS_ROOT_NAME);
-        this.historyDir = new Pair();
+        this.historyDir = new ListHistory(2);
         this.historyDir.add(this.root);
         this.fileSystem = new Map();
         this.fileSystem.set(this.root, this.root.content);
@@ -102,33 +103,6 @@ class FileSystemManager {
         } else {
             return this.root;
         }
-    }
-}
-
-class Pair<T> {
-    private data: T[];
-    private lastAddIndex: number;
-  
-    constructor() {
-      this.data = [];
-      this.lastAddIndex = 0;
-    }
-  
-    add(item: T) {
-      if (this.lastAddIndex > 1) {
-            this.lastAddIndex = 1;
-            this.data[0] = this.data[1];
-      }
-      this.data[this.lastAddIndex] = item;
-      this.lastAddIndex++;
-    }
-  
-    getOldPointer(): T {
-       return this.data[0];
-    }
-
-    list() {
-       return this.data;
     }
 }
 

@@ -29,7 +29,7 @@ class FileSystemClient {
         const currentDir = this.pointer;
         if (pathTo.length > 0) {
             if (pathTo.length == 1 && pathTo[0] == '-') {
-                this.pointer = this.home.historyDir.getOldPointer();
+                this.pointer = this.home.historyDir.getElem(0);
             } else {
                 let childDir: FsDir | FsFile | undefined;
                 let position = 0;
@@ -63,6 +63,7 @@ class FileSystemClient {
             this.pointer = this.home.getRoot();
         }
         this.home.historyDir.add(this.pointer);
+        console.log(this.home.historyDir.getList());
         return true;
     }
 

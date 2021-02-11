@@ -1,25 +1,30 @@
 import {FileSystemClient} from './fs/FileSystemClient';
 import {FileSystemManager} from './fs/FileSystemManager';
-import {Parser} from './Parser';
-import {Pair} from './Parser';
+import {Parser, Pair} from './Parser';
+import { ListHistory } from './ListHistory'
 
 class Terminal {
     private client: FileSystemClient;
-    private historyCommand: HistoryCommand<string>;
+    private historyCommand: ListHistory<string>;
     private currentHistoryIndex: number;
     private readonly terminalElem: HTMLDivElement;
     private readonly workLineElem: HTMLDivElement;
+    private divParam!: HTMLDivElement;
     private readonly pathElem: HTMLSpanElement;
     private readonly inputElem: HTMLSpanElement;
+    private inputParam: HTMLSpanElement; 
+    private isFocus: boolean;
 
     constructor(fileSystem: FileSystemManager) {
         this.client = new FileSystemClient(fileSystem);
-        this.historyCommand = new HistoryCommand();
+        this.historyCommand = new ListHistory(15);
         this.terminalElem = document.createElement('div');
         this.workLineElem = document.createElement('div');
         this.pathElem = document.createElement('span');
         this.inputElem = document.createElement('span');
+        this.inputParam = document.createElement('span'); 
         this.currentHistoryIndex = this.historyCommand.getLength();
+        this.isFocus = true;
         this.init();
     }
 
@@ -27,7 +32,7 @@ class Terminal {
         this.terminalElem.id = 'terminal';
         this.terminalElem.className = 'container';
 
-        this.workLineElem.className = "work__line";
+        this.workLineElem.className = 'work__line';
         this.workLineElem.innerHTML = '<span class="initial__entry">guest:</span>';
 
         this.pathElem.className = 'path';
@@ -38,7 +43,9 @@ class Terminal {
         this.inputElem.setAttribute('autocorrect', 'off');
         this.inputElem.setAttribute('autocapitalize', 'none');
         this.inputElem.setAttribute('autocomplete', 'off');
-        this.inputElem.addEventListener('blur', this.handleMouseUp)
+        this.inputElem.addEventListener('blur', this.handleMouseUpInputCmd);
+
+        this.inputParam = this.inputElem.cloneNode(true) as HTMLSpanElement;       
 
         this.workLineElem.appendChild(this.pathElem);
         this.workLineElem.appendChild(this.inputElem);
@@ -175,22 +182,25 @@ class Terminal {
                 str = content;
             }
         } else if (commandName == 'cat') {
-            if (cmd.length != 3) {
-                throw new Error('Invalid input');
-            }
-            const flags = Parser.parseFlags(cmd, ['E', 'n', 'b']);
-            const path = cmd[2].split(' ');
-            const content = this.client.cat(path, flags).join('\n');
-            if (additionalArg.length != 0) {
-                if (additionalArg[0] == '>>') {
-                    this.client.cancateOutputInTargetFile(additionalArg[1].split('/'), content);
-                } else if (additionalArg[0] == '>') {
-                    this.client.setOutputInTargetFile(additionalArg[1].split('/'), content);
+            if (cmd.length == 2 && additionalArg.length == 2) {
+                return str;
+            } else if (cmd.length == 3) {
+                const flags = Parser.parseFlags(cmd, ['E', 'n', 'b']);
+                const path = cmd[2].split(' ');
+                const content = this.client.cat(path, flags).join('\n');
+                if (additionalArg.length != 0) {
+                    if (additionalArg[0] == '>>') {
+                        this.client.cancateOutputInTargetFile(additionalArg[1].split('/'), content);
+                    } else if (additionalArg[0] == '>') {
+                        this.client.setOutputInTargetFile(additionalArg[1].split('/'), content);
+                    } else {
+                        throw new Error('Invalid input');
+                    }
                 } else {
-                    throw new Error('Invalid input');
+                    str = content;
                 }
             } else {
-                str = content;
+                throw new Error('Invalid input');
             }
         } else if (commandName == 'help') {
             if (cmd.length > 2) {
@@ -215,7 +225,8 @@ class Terminal {
     commandOutput(line: string) {
         let output: string | undefined;
         try {
-            output = this.runCommand(Parser.parse(line));
+            const cmd = Parser.parse(line)
+            output = this.runCommand(cmd);
         } catch (error) {
             output = (error as Error).message;
         }
@@ -226,7 +237,19 @@ class Terminal {
                 div.innerHTML = item;
                 this.terminalElem.insertBefore(div, this.workLineElem);
             }
-        }
+        } else {
+            const re = /cat >/;
+            if (re.test(line)) {
+                this.inputParam.innerHTML = '';
+                this.divParam =  document.createElement('div');
+                this.divParam.className = 'param__line';
+                this.inputElem.removeEventListener('blur', this.handleMouseUpInputCmd);
+                this.inputParam.addEventListener('blur', this.handleMouseUpInputParam);
+                this.divParam.appendChild(this.inputParam);
+                this.terminalElem.append(this.divParam);
+                this.inputParam.focus();
+            } 
+        } 
     }
 
     setPath(path: string) {
@@ -234,25 +257,50 @@ class Terminal {
     }
 
     handleKeyDown = (event: KeyboardEvent) => {
-        console.log('index222222222: ' + this.currentHistoryIndex);
         if (event.code == 'Enter') {
-            event.preventDefault();
-            this.sendCommand(this.inputElem.innerText.trim());
-            this.inputElem.innerText = '';
-            this.currentHistoryIndex = this.historyCommand.getLength();
-        } else if (event.code == 'ArrowUp' || event.code == 'ArrowDown') {
+            if (this.isFocus) {
+                event.preventDefault();
+                this.sendCommand(this.inputElem.innerText.trim());
+                if (this.isFocus) {
+                    this.inputElem.innerText = '';
+                }
+                this.currentHistoryIndex = this.historyCommand.getLength();
+            }
+        } else if ((event.code == 'ArrowUp' || event.code == 'ArrowDown') && this.isFocus) {
             event.preventDefault();
             this.scrollCommand(event.code);
+        } else if (event.ctrlKey && !this.isFocus) {
+            event.preventDefault();
+            this.sendParam(this.inputParam.innerText.trim(), this.inputElem.innerText.trim());
+            this.isFocus = true;
+            this.inputParam.removeEventListener('blur', this.handleMouseUpInputParam);
+            this.inputElem.addEventListener('blur', this.handleMouseUpInputCmd);
+            this.terminalElem.insertBefore(this.workLineElem.cloneNode(true), this.divParam); // вот тут вставляется не там
+            this.inputElem.innerText = '';
+            this.inputElem.focus();
         }
     }
 
-    handleMouseUp = () => {
+    handleMouseUpInputCmd = () => {
         this.inputElem.focus();
     }
 
+    handleMouseUpInputParam = () => {
+        this.inputParam.focus();
+    }
+
     sendCommand(command: string) {
-        this.terminalElem.insertBefore(this.workLineElem.cloneNode(true), this.workLineElem);
-        if (command !== '') {
+        const re = /cat >/;
+        if (re.test(command)) {
+            this.isFocus = false;
+        } else {
+            this.inputParam.removeEventListener('blur', this.handleMouseUpInputParam);
+            this.inputElem.addEventListener('blur', this.handleMouseUpInputCmd);
+            this.terminalElem.insertBefore(this.workLineElem.cloneNode(true), this.workLineElem);
+            this.inputElem.focus();
+            this.isFocus = true;
+        }
+        if (command != '') {
             this.historyCommand.add(command);
             this.commandOutput(command);
         }
@@ -271,6 +319,15 @@ class Terminal {
                 this.currentHistoryIndex = 0;
             }
             this.inputElem.innerText = this.historyCommand.getElem(this.currentHistoryIndex);
+            const range = document.createRange();
+            range.selectNodeContents(this.inputElem);
+            range.collapse(false);
+            const sel = window.getSelection();
+            if (sel == null) {
+                return;
+            }
+            sel.removeAllRanges();
+            sel.addRange(range);
         } else if (str == 'ArrowDown') {
             this.currentHistoryIndex++;
             if (this.currentHistoryIndex > this.historyCommand.getLength() - 1) {
@@ -281,45 +338,23 @@ class Terminal {
             }
         }
     }
-}
 
-class HistoryCommand<T> {
-    private data: T[];
-    private lastIndex: number;
-
-    constructor() {
-        this.data = [];
-        this.lastIndex = 0;
-    }
-
-    add(item: T) {
-        if (this.lastIndex > 14) {
-            this.lastIndex = 14;
-            if (this.data[this.lastIndex] == item) {
-                return;
-            }
-            for (let i = 0; i < this.data.length - 1; i++) {
-                this.data[i] = this.data[i + 1];
-            }
+    sendParam(str: string, cmd: string) {
+        const index = cmd.indexOf('>');
+        cmd = cmd.slice(index);
+        cmd = cmd.trim()
+        const re = />/g;
+        const counter = cmd.match(re);
+        const elems = cmd.split(' ');
+        for (let i = 0; i < 2; i++) {
+            elems[i] = elems[i].trim();
         }
-        if (this.data[this.lastIndex - 1] == item) {
-            return;
+        if (counter?.length == 1) {
+            this.client.setOutputInTargetFile(elems[1].split('/'), str)
+        } else if (counter?.length == 2) {
+            this.client.cancateOutputInTargetFile(elems[1].split('/'), str)
         }
-        this.data[this.lastIndex] = item;
-        this.lastIndex++;
-    }
-
-    getElem(index: number): T {
-        return this.data[index];
-    }
-
-    getLength(): number {
-        return this.data.length;
-    }
-
-    getList() {
-        return this.data;
     }
 }
 
-export {Terminal}
+export { Terminal }

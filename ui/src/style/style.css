@@ -31,6 +31,10 @@ body {
     cursor: context-menu;
 }
 
+.param__line {
+    padding-top: 7px;
+}
+
 .initial__entry {
     color: var(--color--initial-entry);
 }
