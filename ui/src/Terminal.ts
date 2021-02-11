@@ -258,15 +258,13 @@ class Terminal {
     }
 
     handleKeyDown = (event: KeyboardEvent) => {
-        if (event.code == 'Enter') {
+        if (event.code == 'Enter' && this.isFocus) {
+            event.preventDefault();
+            this.sendCommand(this.inputElem.innerText.trim());
             if (this.isFocus) {
-                event.preventDefault();
-                this.sendCommand(this.inputElem.innerText.trim());
-                if (this.isFocus) {
-                    this.inputElem.innerText = '';
-                }
-                this.currentHistoryIndex = this.historyCommand.getLength();
+                this.inputElem.innerText = '';
             }
+            this.currentHistoryIndex = this.historyCommand.getLength();
         } else if ((event.code == 'ArrowUp' || event.code == 'ArrowDown') && this.isFocus) {
             event.preventDefault();
             this.scrollCommand(event.code);
