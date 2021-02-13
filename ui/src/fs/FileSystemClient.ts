@@ -558,29 +558,31 @@ class FileSystemClient {
             this.pointer = currentDir;
             position++;
         }
+        const fullContent = str.join('\n');
+        str = fullContent.split('\n');
+        if (flags.size == 0) {
+            for(let i = 0; i < str.length; i++) {
+                if (str[i] == '' || str[i] == '&nbsp;')
+                str[i] = '&nbsp;' + str[i];
+            }
+        } 
         if (this.hasAll(flags, 'E')) {
-            const fullContent = str.join('\n');
-            str = fullContent.split('\n');
             for(let i = 0; i < str.length; i++) {
                 str[i] = str[i] + '$';
             }
         }
         if (this.hasAll(flags, 'n')) {
-            const fullContent = str.join('\n');
-            str = fullContent.split('\n');
             for(let i = 0; i < str.length; i++) {
                 str[i] = '&emsp;&emsp;' + (i + 1) + ' ' + str[i];
             }
         } else if (this.hasAll(flags, 'b')) {
-            const fullContent = str.join('\n');
-            str = fullContent.split('\n');
             let counter = 1;
             for(let i = 0; i < str.length; i++) {
-                if (str[i] != '') {
+                if (str[i] != '&nbsp;' && str[i] != '') {
                     str[i] = '&emsp;&emsp;' + counter + ' ' + str[i];
                     counter++;
                 } else {
-                    str[i] = str[i];
+                    str[i] = '&nbsp;' + str[i];
                 }
             }
         }
@@ -668,7 +670,11 @@ class FileSystemClient {
     private getContentFile(path: string, str: string[]) {
         const file = this.pointer.get(path);
         if (file instanceof FsFile) {
-            str.push(file.content);
+            if (file.content.length == 0) {
+                str.push('&nbsp;')
+            } else {
+                str.push(file.content);
+            }
         }
         this.messageErrorFile(path, file);
     }
