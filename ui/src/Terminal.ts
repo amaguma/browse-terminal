@@ -62,12 +62,13 @@ class Terminal {
         const commandName = cmd[0];
         let str: string | undefined;
         if (commandName == 'cd') {
+            const flags = Parser.parseFlags(cmd, ['-help']);
             if (cmd.length == 3) {
                 const lastIndex = cmd.length - 1;
                 const path = cmd[lastIndex].split('/');
-                this.client.cd(path);
+                str = this.client.cd(path, flags);
             } else if (cmd.length == 2) {
-                this.client.cd([]);
+                str = this.client.cd([], flags);
             } else {
                 throw new Error('Invalid input');
             }
@@ -75,10 +76,10 @@ class Terminal {
             if (cmd.length != 3) {
                 throw new Error('Invalid input');
             }
-            const flags = Parser.parseFlags(cmd, ['p']);
+            const flags = Parser.parseFlags(cmd, ['p', '-help']);
             const lastIndex = cmd.length - 1;
             const path = cmd[lastIndex].split(' ');
-            this.client.mkdir(path, flags);
+            str = this.client.mkdir(path, flags);
         } else if (commandName == 'echo') {
             if (cmd.length != 3) {
                 throw new Error('Invalid input');
@@ -100,24 +101,24 @@ class Terminal {
             if (cmd.length != 3) {
                 throw new Error('Invalid input');
             }
-            const flags = Parser.parseFlags(cmd, ['p']);
+            const flags = Parser.parseFlags(cmd, ['p', '-help']);
             const lastIndex = cmd.length - 1;
             const path = cmd[lastIndex].split('/');
-            this.client.rmdir(path, flags);
+            str = this.client.rmdir(path, flags);
         } else if (commandName == 'touch') {
-            const flags = Parser.parseFlags(cmd, ['c', 'd', 'r']);
+            const flags = Parser.parseFlags(cmd, ['c', 'd', 'r', '-help']);
             const lastIndex = cmd.length - 1;
             const path = cmd[lastIndex].split(' ');
             if (cmd.length == 3) {
-                this.client.touch(path, flags)
+                str = this.client.touch(path, flags)
             } else if (cmd.length == 4) {
                 const param = cmd[2];
-                this.client.touch(path, flags, param);
+                str = this.client.touch(path, flags, param);
             } else {
                 throw new Error('Invalid input');
             }
         } else if (commandName == 'ls') {
-            const flags = Parser.parseFlags(cmd, ['1', 'l', 'Q', 't', 's', 'S']);
+            const flags = Parser.parseFlags(cmd, ['l', 'Q', 't', 's', 'S', '-help']);
             if (cmd.length == 2) {
                 const content = this.client.ls(flags).join('\n');
                 if (additionalArg.length != 0) {
@@ -152,7 +153,8 @@ class Terminal {
             if (cmd.length > 2) {
                 throw new Error('Invalid input');
             }
-            const content = this.client.pwd();
+            const flags = Parser.parseFlags(cmd, ['-help']);
+            const content = this.client.pwd(flags);
             if (additionalArg.length != 0) {
                 if (additionalArg[0] == '>>') {
                     this.client.cancateOutputInTargetFile(additionalArg[1].split('/'), content);
@@ -168,7 +170,7 @@ class Terminal {
             if (cmd.length != 3) {
                 throw new Error('Invalid input');
             }
-            const flags = Parser.parseFlags(cmd, ['r', 'f', 'v', 'd']);
+            const flags = Parser.parseFlags(cmd, ['r', 'f', 'v', 'd', '-help']);
             const path = cmd[2].split(' ');
             const content = this.client.rm(path, flags)?.join('\n');
             if (additionalArg.length != 0 && content) {
@@ -303,7 +305,7 @@ class Terminal {
             this.historyCommand.add(command);
             this.commandOutput(command);
         }
-        const path = this.client.pwd() == '/home' ? '/' : this.client.pwd().slice(5);
+        const path = this.client.pwd(new Set<string>([])) == '/home' ? '/' : this.client.pwd(new Set<string>([])).slice(5);
         this.setPath(path);
     }
 

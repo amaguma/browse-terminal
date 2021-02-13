@@ -25,55 +25,63 @@ class FileSystemClient {
         this.pointer = home.getRoot();
     }
 
-    cd(pathTo: string[]): boolean {
+    cd(pathTo: string[], flags: Set<string>): string | undefined {
         const currentDir = this.pointer;
+        let str: string | undefined;
         if (pathTo.length > 0) {
-            if (pathTo.length == 1 && pathTo[0] == '-') {
-                this.pointer = this.home.historyDir.getElem(0);
+            if (this.hasAll(flags, '-help') && flags.size == 1) {
+                str = 'cd: cd [DIR]\n' +
+                    'Change the shell working directiry.\n' +
+                    'Change the current directory to DIR.  The default DIR is the value of the\n' + 
+                    'HOME shell variable.';
             } else {
-                let childDir: FsDir | FsFile | undefined;
-                let position = 0;
-                do {
-                   if (pathTo[position] == '..') {
-                        if (this.pointer == this.home.getRoot()) {
-                            this.pointer == this.home.getRoot();
-                        } else {
-                            this.pointer = this.pointer.parentDir;
-                        }
-                    } else {
-                        if (pathTo[position] == 'home' && position == 0) {
-                            this.pointer = this.home.getRoot();
-                        } else {
-                            childDir = this.pointer.get(pathTo[position]);
-                            if (!childDir) {
-                                this.pointer = currentDir;
-                                throw new Error(`${pathTo.join('/')} not found`);
+                if (pathTo.length == 1 && pathTo[0] == '-') {
+                    this.pointer = this.home.historyDir.getElem(0);
+                } else {
+                    let childDir: FsDir | FsFile | undefined;
+                    let position = 0;
+                    do {
+                       if (pathTo[position] == '..') {
+                            if (this.pointer == this.home.getRoot()) {
+                                this.pointer == this.home.getRoot();
+                            } else {
+                                this.pointer = this.pointer.parentDir;
                             }
-                            if (!(childDir instanceof FsDir)) {
-                                this.pointer = currentDir;
-                                throw new Error(`${pathTo.join('/')} is not a directory`);
+                        } else {
+                            if (pathTo[position] == 'home' && position == 0) {
+                                this.pointer = this.home.getRoot();
+                            } else {
+                                childDir = this.pointer.get(pathTo[position]);
+                                if (!childDir) {
+                                    this.pointer = currentDir;
+                                    throw new Error(`${pathTo.join('/')} not found`);
+                                }
+                                if (!(childDir instanceof FsDir)) {
+                                    this.pointer = currentDir;
+                                    throw new Error(`${pathTo.join('/')} is not a directory`);
+                                }
+                                this.pointer = childDir;
                             }
-                            this.pointer = childDir;
-                        }
-                    } 
-                    position++;
-                } while (position < pathTo.length);
+                        } 
+                        position++;
+                    } while (position < pathTo.length);
+                }
             }
         } else {
             this.pointer = this.home.getRoot();
         }
         this.home.historyDir.add(this.pointer);
-        console.log(this.home.historyDir.getList());
-        return true;
+        return str;
     }
 
-    mkdir(path: string[], flags: Set<string>): boolean {
+    mkdir(path: string[], flags: Set<string>): string | undefined {
         const pathTo: string[][] = Parser.parsePath(path);
         if (pathTo.length == 0) {
             throw new Error('Invalid input');
         }
         let position = 0;
         let elem = 0;
+        let str: string | undefined;
         const currentDir = this.pointer;
         if (flags.size == 0) {
             while(position < pathTo.length) {
@@ -81,14 +89,20 @@ class FileSystemClient {
                     this.addDir(pathTo[position][0]);
                 } else {
                     const indexElem = pathTo[position].length - 1;
-                    this.cd(pathTo[position].slice(0, indexElem));
+                    this.cd(pathTo[position].slice(0, indexElem), new Set<string>([]));
                     this.addDir(pathTo[position][indexElem]);
                 }
                 this.pointer = currentDir;
                 position++;
             }
         } else {
-            if (this.hasAll(flags, 'p') && flags.size == 1) {
+            if (this.hasAll(flags, '-help') && flags.size == 1) {
+                str = 'Usage: mkdir [OPTION] DIRECTORY...\n' +
+                    'Create the DIRECTORY(ies), if they do not already exist.\n' +
+                    'flags:\n' + 
+                    '-p create parent directory\n' +
+                    '--help display this help';
+            } else if (this.hasAll(flags, 'p') && flags.size == 1) {
                 while(position < pathTo.length) {
                     while (elem < pathTo[position].length) {
                         const childDir = this.addDir(pathTo[position][elem]);
@@ -103,17 +117,18 @@ class FileSystemClient {
                 throw new Error('Invalid flag');
             }
         }
-        return true;
+        return str;
     }
 
-    rmdir(pathTo: string[], flags: Set<string>): boolean {
+    rmdir(pathTo: string[], flags: Set<string>): string | undefined {
         if (pathTo.length == 0) {
             throw new Error('Invalid input');
         }
         let position = 0;
         const currentDir = this.pointer; 
+        let str: string | undefined;
         if (flags.size == 0) {
-            this.cd(pathTo.slice(0, pathTo.length))
+            this.cd(pathTo.slice(0, pathTo.length), new Set<string>([]));
             if (this.pointer.content.length == 0) {
                 this.pointer.parentDir.removeThisDir(this.pointer);
             } else {
@@ -121,9 +136,15 @@ class FileSystemClient {
             }
             this.pointer = currentDir;
         } else {
-            if (this.hasAll(flags, 'p') && flags.size == 1) {
+            if (this.hasAll(flags, '-help') && flags.size == 1) {
+                str = 'Usage: rmdir [OPTION] DIRECTORY...\n' +
+                    'Remove the DIRECTORY(ies), if they are empty.\n' +
+                    'flags:\n' + 
+                    '-p remove DIRECTORY and its ancestors\n' +
+                    '--help display this help';
+            } else if (this.hasAll(flags, 'p') && flags.size == 1) {
                 while(position < pathTo.length) {
-                    this.cd(pathTo.slice(0, pathTo.length - position))
+                    this.cd(pathTo.slice(0, pathTo.length - position), new Set<string>([]))
                     if (this.pointer.content.length == 0) {
                         this.pointer.parentDir.removeThisDir(this.pointer);
                     } else {
@@ -136,10 +157,10 @@ class FileSystemClient {
                 throw new Error('Invalid flag');
             }
         }
-        return true;
+        return str;
     }
 
-    touch(path: string[], flags: Set<string>, param?: string): boolean {
+    touch(path: string[], flags: Set<string>, param?: string): string | undefined {
         const pathTo: string[][] =  Parser.parsePath(path);
         if (pathTo.length == 0) {
             throw new Error('Invalid input');
@@ -149,27 +170,37 @@ class FileSystemClient {
         }
         let position = 0;
         const currentDir = this.pointer;
+        let str: string | undefined;
         if (flags.size == 0 || (this.hasAll(flags, 'c') && flags.size == 1)) {
             while(position < pathTo.length) {
                 if (pathTo[position].length == 1) {
                     this.createFile(pathTo[position][0], this.hasAll(flags, 'c'));
                 } else {
                     const indexElem = pathTo[position].length - 1;
-                    this.cd(pathTo[position].slice(0, indexElem));
+                    this.cd(pathTo[position].slice(0, indexElem), new Set<string>([]));
                     this.createFile(pathTo[position][indexElem], this.hasAll(flags, 'c'));
                 }
                 position++;
                 this.pointer = currentDir;
             }
         } else {
-            if (this.hasAll(flags, 'd')) {
+            if (this.hasAll(flags, '-help') && flags.size == 1) {
+                str = 'Usage: rmdir [OPTION] FILE...\n' +
+                    'Update the access and modification times of each FILE to the current time.\n' +
+                    'A FILE argument that does not exist is created empty, unless -c is supplied.\n' +
+                    'flags:\n' + 
+                    '-c do not create any files\n' +
+                    '-d parse STRING and use it instead of current time\n' +
+                    '-r use this file\'s times instead of current time\n' +
+                    '--help display this help';
+            } else if (this.hasAll(flags, 'd')) {
                 while(position < pathTo.length) {
                     if (pathTo[position].length == 1) {
-                        this.createFile(pathTo[position][0], this.hasAll(flags, 'c'), param)
+                        this.createFile(pathTo[position][0], this.hasAll(flags, 'c'), param);
                     } else {
                         const indexElem = pathTo[position].length - 1;
-                        this.cd(pathTo[position].slice(0, indexElem));
-                        this.createFile(pathTo[position][indexElem], this.hasAll(flags, 'c'), param)
+                        this.cd(pathTo[position].slice(0, indexElem), new Set<string>([]));
+                        this.createFile(pathTo[position][indexElem], this.hasAll(flags, 'c'), param);
                     }
                     position++;
                     this.pointer = currentDir;
@@ -184,19 +215,19 @@ class FileSystemClient {
                         this.pushLastMode(pathTo[1][0], file1, this.hasAll(flags, 'c'));
                     } else {
                         const indexElem = pathTo[1].length - 1;
-                        this.cd(pathTo[1].slice(0, indexElem));
+                        this.cd(pathTo[1].slice(0, indexElem), new Set<string>([]));
                         this.pushLastMode(pathTo[1][indexElem], file1, this.hasAll(flags, 'c'));
                     }
                 } else {
                     const indexElem = pathTo[0].length - 1;
-                    this.cd(pathTo[0].slice(0, indexElem));
+                    this.cd(pathTo[0].slice(0, indexElem), new Set<string>([]));
                     const file1 = this.getFile(pathTo[0][indexElem]);
                     this.pointer = currentDir;
                     if (pathTo[1].length == 1) {
                         this.pushLastMode(pathTo[1][0], file1, this.hasAll(flags, 'c'));
                     } else {
                         const indexElem = pathTo[1].length - 1;
-                        this.cd(pathTo[1].slice(0, indexElem));
+                        this.cd(pathTo[1].slice(0, indexElem), new Set<string>([]));
                         this.pushLastMode(pathTo[1][indexElem], file1, this.hasAll(flags, 'c'));
                     } 
                 }
@@ -205,29 +236,42 @@ class FileSystemClient {
                 throw new Error('Invalid flag');
             }
         }
-        return true;
+        return str;
     }
 
-    pwd() {
+    pwd(flags: Set<string>) {
         const elemOfPath = [];
         const currentDir = this.pointer; 
-        while(this.pointer != this.home.getRoot()) {
-            elemOfPath.push(this.pointer.name);
-            this.pointer = this.pointer.parentDir;
+        let str: string | undefined;
+        if (this.hasAll(flags, '-help') && flags.size == 1) {
+            str = 'pwd: pwd\n' +
+                    'Print the name of the current working directory.\n' +
+                    'A FILE argument that does not exist is created empty, unless -c is supplied.\n' +
+                    'flags:\n' + 
+                    '--help display this help';
+            return str;
+        } else if (flags.size == 0) {
+            while(this.pointer != this.home.getRoot()) {
+                elemOfPath.push(this.pointer.name);
+                this.pointer = this.pointer.parentDir;
+            }
+            this.pointer = currentDir;
+            elemOfPath.push('home');
+            const path = '/' + elemOfPath.reverse().join('/');
+            console.log(path);
+            return path;
+        } else {
+            throw new Error('Invalid input');
         }
-        this.pointer = currentDir;
-        elemOfPath.push('home');
-        const path = '/' + elemOfPath.reverse().join('/');
-        console.log(path);
-        return path;
     }
 
-    rm(path: string[], flags: Set<string>) {
+    rm(path: string[], flags: Set<string>): string[] | undefined {
         const pathTo: string[][] =  Parser.parsePath(path); 
         if (pathTo.length == 0) {
             throw new Error('Invalid input')
         }
         let position = 0;
+        let strHelp: string[] | undefined;
         const currentDir = this.pointer;
         if (flags.size == 0) {
             const str: string[] = [];
@@ -237,7 +281,7 @@ class FileSystemClient {
                     this.messageErrorFile(pathTo[position][0], elemDel);
                 } else {
                     const indexElem = pathTo[position].length - 1;
-                    this.cd(pathTo[position].slice(0, indexElem));
+                    this.cd(pathTo[position].slice(0, indexElem), new Set<string>([]));
                     const elemDel = this.deleteFile(pathTo[position][indexElem], str);
                     this.messageErrorFile(pathTo[position][indexElem], elemDel);
                 }
@@ -245,14 +289,24 @@ class FileSystemClient {
                 this.pointer = currentDir;
             }
         } else { 
-            if (this.hasAll(flags, 'r', 'f', 'v') && flags.size == 3) {
+            if (this.hasAll(flags, '-help') && flags.size == 1) {
+                strHelp = ['Usage: rm [OPTION]... FILE...',
+                    'Remove the FILE(s).',
+                    'flags:',
+                    '-f ignore nonexistent files, never prompt',
+                    '-r remove directories and their contents recursively',
+                    '-v explain what is being done',
+                    '-d remove empty directories',
+                    '--help display this help'];
+                return strHelp;
+            } else if (this.hasAll(flags, 'r', 'f', 'v') && flags.size == 3) {
                 const str: string[] = [];
                 while(position < pathTo.length) {
                     if (pathTo[position].length == 1) {
                         this.deleteDir(pathTo[position][0], str);
                     } else {
                         const indexElem = pathTo[position].length - 1;
-                        this.cd(pathTo[position].slice(0, indexElem));
+                        this.cd(pathTo[position].slice(0, indexElem), new Set<string>([]));
                         this.deleteDir(pathTo[position][indexElem], str);
                     }
                     position++;
@@ -273,7 +327,7 @@ class FileSystemClient {
                         this.messageErrorDir(pathTo[position][0], elemDel);
                     } else {
                         const indexElem = pathTo[position].length - 1;
-                        this.cd(pathTo[position].slice(0, indexElem));
+                        this.cd(pathTo[position].slice(0, indexElem), new Set<string>([]));
                         const elemDel = this.deleteDir(pathTo[position][indexElem], str);
                         this.messageErrorDir(pathTo[position][indexElem], elemDel);
                     }
@@ -294,7 +348,7 @@ class FileSystemClient {
                         this.deleteDir(pathTo[position][0], str);
                     } else {
                         const indexElem = pathTo[position].length - 1;
-                        this.cd(pathTo[position].slice(0, indexElem));
+                        this.cd(pathTo[position].slice(0, indexElem), new Set<string>([]));
                         this.deleteDir(pathTo[position][indexElem], str);
                     }
                     position++;
@@ -310,7 +364,7 @@ class FileSystemClient {
                         }
                     } else {
                         const indexElem = pathTo[position].length - 1;
-                        this.cd(pathTo[position].slice(0, indexElem));
+                        this.cd(pathTo[position].slice(0, indexElem), new Set<string>([]));
                         const elemDel = this.deleteFile(pathTo[position][indexElem], str);
                         if (elemDel instanceof FsDir) {
                             this.deleteDir(pathTo[position][indexElem], str);
@@ -334,7 +388,7 @@ class FileSystemClient {
                         this.messageErrorDir(pathTo[position][0], elemDel);
                     } else {
                         const indexElem = pathTo[position].length - 1;
-                        this.cd(pathTo[position].slice(0, indexElem));
+                        this.cd(pathTo[position].slice(0, indexElem), new Set<string>([]));
                         const elemDel = this.deleteDir(pathTo[position][indexElem], str);
                         this.messageErrorDir(pathTo[position][indexElem], elemDel);
                     }
@@ -352,7 +406,7 @@ class FileSystemClient {
                         this.messageError(pathTo[position][0], elemDel);
                     } else {
                         const indexElem = pathTo[position].length - 1;
-                        this.cd(pathTo[position].slice(0, indexElem));
+                        this.cd(pathTo[position].slice(0, indexElem), new Set<string>([]));
                         const elemDel = this.deleteFile(pathTo[position][indexElem], str);
                         if (elemDel instanceof FsDir) {
                             this.deleteDir(pathTo[position][indexElem], str);
@@ -376,7 +430,7 @@ class FileSystemClient {
                         this.deleteFile(pathTo[position][0], str);
                     } else {
                         const indexElem = pathTo[position].length - 1;
-                        this.cd(pathTo[position].slice(0, indexElem));
+                        this.cd(pathTo[position].slice(0, indexElem), new Set<string>([]));
                         this.deleteFile(pathTo[position][indexElem], str);
                     }
                     position++;
@@ -397,13 +451,26 @@ class FileSystemClient {
         const elems: Array<FsDir | FsFile> = [];
         const str: string[] = [];
         const currentDir = this.pointer;
+        let strHelp: string[] | undefined;
         if (pathTo) {
-            this.cd(pathTo);
+            this.cd(pathTo, new Set<string>([]));
         }
         this.pointer.content.map(item => {
             elems.push(item);
             str.push(item.name);
         });
+        if (this.hasAll(flags, '-help') && flags.size == 1) {
+            strHelp = ['Usage: ls [OPTION]... [DIR]...',
+                    'List information about the DIR.',
+                    'flags:',
+                    '-Q  enclose entry names in double quotes',
+                    '-S  sort by file size, largest first',
+                    '-s print the allocated size of each file, in blocks',
+                    '-t sort by modification time, newest first',
+                    '-l use a long listing format',
+                    '--help display this help'];
+            return strHelp;
+        } 
         if (this.hasAll(flags, 'Q')) {
             for (let i = 0; i < str.length; i++) {
                 str[i] = '"' + str[i] + '"';
@@ -467,11 +534,12 @@ class FileSystemClient {
         return str;
     }
 
-    cat(source: string[], flags: Set<string>) {
+    cat(source: string[], flags: Set<string>): string[] {
         const sourcePath: string[][] =  Parser.parsePath(source);
         const currentDir = this.pointer;
         let str: string[] = [];
         let position = 0;
+        let strHelp: string[];
         if (sourcePath.length == 0) {
             throw new Error('Invalid input');
         }
@@ -480,6 +548,17 @@ class FileSystemClient {
             this.pointer = currentDir;
             position++;
         }
+        if (this.hasAll(flags, '-help') && flags.size == 1) {
+            strHelp = ['Usage: cat [OPTION]... [FILE]...',
+                    'Concatenate FILE(s) to standard output.',
+                    'With no FILE, or when FILE is -, read standard input.',
+                    'flags:',
+                    '-E display $ at end of each line',
+                    '-n number all output lines',
+                    '-b number nonempty output lines, overrides -n',
+                    '--help display this help'];
+            return strHelp;
+        } 
         if (this.hasAll(flags, 'E')) {
             const fullContent = str.join('\n');
             str = fullContent.split('\n');
@@ -491,7 +570,7 @@ class FileSystemClient {
             const fullContent = str.join('\n');
             str = fullContent.split('\n');
             for(let i = 0; i < str.length; i++) {
-                str[i] = '\t' + (i + 1) + ' ' + str[i];
+                str[i] = '    ' + (i + 1) + ' ' + str[i];
             }
         } else if (this.hasAll(flags, 'b')) {
             const fullContent = str.join('\n');
@@ -499,8 +578,10 @@ class FileSystemClient {
             let counter = 1;
             for(let i = 0; i < str.length; i++) {
                 if (str[i] != '') {
-                    str[i] = '\t' + counter + ' ' + str[i];
+                    str[i] = '    ' + counter + ' ' + str[i];
                     counter++;
+                } else {
+                    str[i] = str[i];
                 }
             }
         }
@@ -508,7 +589,7 @@ class FileSystemClient {
         return str;
     }
 
-    echo(content: string) {
+    echo(content: string): string {
         return content;
     }
 
@@ -553,7 +634,7 @@ class FileSystemClient {
             this.getContentFile(source[index][0], str);
         } else {
             const indexElem = source[index].length - 1;
-            this.cd(source[index].slice(0, indexElem));
+            this.cd(source[index].slice(0, indexElem), new Set<string>([]));
             this.getContentFile(source[index][indexElem], str);
         }
     }
@@ -563,7 +644,7 @@ class FileSystemClient {
             this.pushContentFile(target[0], content, counter);
         } else {
             const indexElem = target.length - 1;
-            this.cd(target.slice(0, indexElem));
+            this.cd(target.slice(0, indexElem), new Set<string>([]));
             this.pushContentFile(target[indexElem], content, counter);
         }
     }

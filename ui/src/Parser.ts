@@ -14,7 +14,7 @@ class Parser {
         const args: string[] = [];
         const elems: string[] = [];
         const kw = /\s*(cd|mkdir|rmdir|touch|rm|ls|pwd|cat|echo|help)\s*/;
-        const flags = /\s*-(p|d|r|f|v|c|Q|1|s|S|t|l|E|n|b)+\s*/g;
+        const flags = /\s*-(-help|p|d|r|f|v|c|Q|1|s|S|t|l|E|n|b)+\s*/g;
         const text = /\s*('[^\']+')\s*/;
         const path = /\s*([A-Za-z\.\-][A-Za-z0-9_\-\.]*\/?)+\s*/g;
         const re = /[^>]*/;
