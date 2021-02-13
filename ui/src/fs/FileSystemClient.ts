@@ -6,7 +6,7 @@ import { Parser } from "../Parser"
 
 const enum Comands {
     CD = 'cd [DIR] - changes the current folder.',
-    MKDIR = 'mkdir [OPTION] [DIR] - creates a directory.',
+    MKDIR = 'mkdir [OPTION] [DIR]... - creates a directory.',
     RMDIR = 'rmdir [OPTION] [DIR] - removes a directory if it is empty.',
     TOUCH = 'touch [OPTION]... [FILE]... - creates a file.',
     PWD = 'pwd - shows the path to the current directory.',
@@ -28,57 +28,53 @@ class FileSystemClient {
     cd(pathTo: string[], flags: Set<string>): string | undefined {
         const currentDir = this.pointer;
         let str: string | undefined;
+        if (this.hasAll(flags, '-help') && flags.size == 1) {
+            str = 'cd: cd [DIR]\n' +
+                'Change the shell working directiry.\n' +
+                'Change the current directory to DIR.  The default DIR is the value of the\n' + 
+                'HOME shell variable.';
+            return str;
+        }
         if (pathTo.length > 0) {
-            if (this.hasAll(flags, '-help') && flags.size == 1) {
-                str = 'cd: cd [DIR]\n' +
-                    'Change the shell working directiry.\n' +
-                    'Change the current directory to DIR.  The default DIR is the value of the\n' + 
-                    'HOME shell variable.';
+            if (pathTo.length == 1 && pathTo[0] == '-') {
+                this.pointer = this.home.historyDir.getElem(0);
             } else {
-                if (pathTo.length == 1 && pathTo[0] == '-') {
-                    this.pointer = this.home.historyDir.getElem(0);
-                } else {
-                    let childDir: FsDir | FsFile | undefined;
-                    let position = 0;
-                    do {
-                       if (pathTo[position] == '..') {
-                            if (this.pointer == this.home.getRoot()) {
-                                this.pointer == this.home.getRoot();
-                            } else {
-                                this.pointer = this.pointer.parentDir;
-                            }
+                let childDir: FsDir | FsFile | undefined;
+                let position = 0;
+                do {
+                    if (pathTo[position] == '..') {
+                        if (this.pointer == this.home.getRoot()) {
+                            this.pointer == this.home.getRoot();
                         } else {
-                            if (pathTo[position] == 'home' && position == 0) {
-                                this.pointer = this.home.getRoot();
-                            } else {
-                                childDir = this.pointer.get(pathTo[position]);
-                                if (!childDir) {
-                                    this.pointer = currentDir;
-                                    throw new Error(`${pathTo.join('/')} not found`);
-                                }
-                                if (!(childDir instanceof FsDir)) {
-                                    this.pointer = currentDir;
-                                    throw new Error(`${pathTo.join('/')} is not a directory`);
-                                }
-                                this.pointer = childDir;
+                            this.pointer = this.pointer.parentDir;
+                        }
+                    } else {
+                        if (pathTo[position] == 'home' && position == 0) {
+                            this.pointer = this.home.getRoot();
+                        } else {
+                            childDir = this.pointer.get(pathTo[position]);
+                            if (!childDir) {
+                                this.pointer = currentDir;
+                                throw new Error(`${pathTo.join('/')} not found`);
                             }
-                        } 
-                        position++;
-                    } while (position < pathTo.length);
-                }
+                            if (!(childDir instanceof FsDir)) {
+                                this.pointer = currentDir;
+                                throw new Error(`${pathTo.join('/')} is not a directory`);
+                            }
+                            this.pointer = childDir;
+                        }
+                    } 
+                    position++;
+                } while (position < pathTo.length);
             }
         } else {
             this.pointer = this.home.getRoot();
         }
         this.home.historyDir.add(this.pointer);
-        return str;
     }
 
     mkdir(path: string[], flags: Set<string>): string | undefined {
         const pathTo: string[][] = Parser.parsePath(path);
-        if (pathTo.length == 0) {
-            throw new Error('Invalid input');
-        }
         let position = 0;
         let elem = 0;
         let str: string | undefined;
@@ -100,7 +96,7 @@ class FileSystemClient {
                 str = 'Usage: mkdir [OPTION] DIRECTORY...\n' +
                     'Create the DIRECTORY(ies), if they do not already exist.\n' +
                     'flags:\n' + 
-                    '-p create parent directory\n' +
+                    '&emsp;&emsp;&nbsp;-p create parent directory\n' +
                     '--help display this help';
             } else if (this.hasAll(flags, 'p') && flags.size == 1) {
                 while(position < pathTo.length) {
@@ -121,9 +117,6 @@ class FileSystemClient {
     }
 
     rmdir(pathTo: string[], flags: Set<string>): string | undefined {
-        if (pathTo.length == 0) {
-            throw new Error('Invalid input');
-        }
         let position = 0;
         const currentDir = this.pointer; 
         let str: string | undefined;
@@ -140,7 +133,7 @@ class FileSystemClient {
                 str = 'Usage: rmdir [OPTION] DIRECTORY...\n' +
                     'Remove the DIRECTORY(ies), if they are empty.\n' +
                     'flags:\n' + 
-                    '-p remove DIRECTORY and its ancestors\n' +
+                    '&emsp;&emsp;&nbsp;-p remove DIRECTORY and its ancestors\n' +
                     '--help display this help';
             } else if (this.hasAll(flags, 'p') && flags.size == 1) {
                 while(position < pathTo.length) {
@@ -162,9 +155,6 @@ class FileSystemClient {
 
     touch(path: string[], flags: Set<string>, param?: string): string | undefined {
         const pathTo: string[][] =  Parser.parsePath(path);
-        if (pathTo.length == 0) {
-            throw new Error('Invalid input');
-        }
         if ((param && !this.hasAll(flags, 'd')) || (!param && this.hasAll(flags, 'd'))) {
             throw new Error('Invalid input');
         }
@@ -189,9 +179,9 @@ class FileSystemClient {
                     'Update the access and modification times of each FILE to the current time.\n' +
                     'A FILE argument that does not exist is created empty, unless -c is supplied.\n' +
                     'flags:\n' + 
-                    '-c do not create any files\n' +
-                    '-d parse STRING and use it instead of current time\n' +
-                    '-r use this file\'s times instead of current time\n' +
+                    '&emsp;&emsp;&nbsp;-c do not create any files\n' +
+                    '&emsp;&emsp;&nbsp;-d parse STRING and use it instead of current time\n' +
+                    '&emsp;&emsp;&nbsp;-r use this file\'s times instead of current time\n' +
                     '--help display this help';
             } else if (this.hasAll(flags, 'd')) {
                 while(position < pathTo.length) {
@@ -267,9 +257,6 @@ class FileSystemClient {
 
     rm(path: string[], flags: Set<string>): string[] | undefined {
         const pathTo: string[][] =  Parser.parsePath(path); 
-        if (pathTo.length == 0) {
-            throw new Error('Invalid input')
-        }
         let position = 0;
         let strHelp: string[] | undefined;
         const currentDir = this.pointer;
@@ -293,10 +280,10 @@ class FileSystemClient {
                 strHelp = ['Usage: rm [OPTION]... FILE...',
                     'Remove the FILE(s).',
                     'flags:',
-                    '-f ignore nonexistent files, never prompt',
-                    '-r remove directories and their contents recursively',
-                    '-v explain what is being done',
-                    '-d remove empty directories',
+                    '&emsp;&emsp;&nbsp;-f ignore nonexistent files, never prompt',
+                    '&emsp;&emsp;&nbsp;-r remove directories and their contents recursively',
+                    '&emsp;&emsp;&nbsp;-v explain what is being done',
+                    '&emsp;&emsp;&nbsp;-d remove empty directories',
                     '--help display this help'];
                 return strHelp;
             } else if (this.hasAll(flags, 'r', 'f', 'v') && flags.size == 3) {
@@ -455,22 +442,26 @@ class FileSystemClient {
         if (pathTo) {
             this.cd(pathTo, new Set<string>([]));
         }
-        this.pointer.content.map(item => {
-            elems.push(item);
-            str.push(item.name);
-        });
         if (this.hasAll(flags, '-help') && flags.size == 1) {
             strHelp = ['Usage: ls [OPTION]... [DIR]...',
                     'List information about the DIR.',
                     'flags:',
-                    '-Q  enclose entry names in double quotes',
-                    '-S  sort by file size, largest first',
-                    '-s print the allocated size of each file, in blocks',
-                    '-t sort by modification time, newest first',
-                    '-l use a long listing format',
+                    '&emsp;&emsp;&nbsp;-Q  enclose entry names in double quotes',
+                    '&emsp;&emsp;&nbsp;-S  sort by file size, largest first',
+                    '&emsp;&emsp;&nbsp;-s print the allocated size of each file, in blocks',
+                    '&emsp;&emsp;&nbsp;-t sort by modification time, newest first',
+                    '&emsp;&emsp;&nbsp;-l use a long listing format',
                     '--help display this help'];
             return strHelp;
         } 
+        if (this.pointer.content.length == 0) {
+            str.push('&nbsp;');
+        } else {
+            this.pointer.content.map(item => {
+                elems.push(item);
+                str.push(item.name);
+            });
+        }
         if (this.hasAll(flags, 'Q')) {
             for (let i = 0; i < str.length; i++) {
                 str[i] = '"' + str[i] + '"';
@@ -505,7 +496,6 @@ class FileSystemClient {
                     maxSizeLen = elemLen;
                 }
             }
-            console.log('maxSize: ' + maxSizeLen)
             for (let i = 0; i < elems.length; i++) {
                 if (elems[i] instanceof FsFile) {
                     sum += elems[i].size;
@@ -515,7 +505,6 @@ class FileSystemClient {
                 for(let j = 0; j < maxSizeLen - elemLen; j++) {
                     str[i] = '&nbsp;' + str[i];
                 }
-                console.log(str[i]);
             } 
             str.push('total ' + sum);  
         }
@@ -553,25 +542,22 @@ class FileSystemClient {
         let str: string[] = [];
         let position = 0;
         let strHelp: string[];
-        if (sourcePath.length == 0) {
-            throw new Error('Invalid input');
-        }
-        while (position < sourcePath.length) {
-            this.getContentInSourceFile(sourcePath, str, position);
-            this.pointer = currentDir;
-            position++;
-        }
         if (this.hasAll(flags, '-help') && flags.size == 1) {
             strHelp = ['Usage: cat [OPTION]... [FILE]...',
                     'Concatenate FILE(s) to standard output.',
                     'With no FILE, or when FILE is -, read standard input.',
                     'flags:',
-                    '-E display $ at end of each line',
-                    '-n number all output lines',
-                    '-b number nonempty output lines, overrides -n',
+                    '&emsp;&emsp;&nbsp;-E display $ at end of each line',
+                    '&emsp;&emsp;&nbsp;-n number all output lines',
+                    '&emsp;&emsp;&nbsp;-b number nonempty output lines, overrides -n',
                     '--help display this help'];
             return strHelp;
         } 
+        while (position < sourcePath.length) {
+            this.getContentInSourceFile(sourcePath, str, position);
+            this.pointer = currentDir;
+            position++;
+        }
         if (this.hasAll(flags, 'E')) {
             const fullContent = str.join('\n');
             str = fullContent.split('\n');
@@ -583,7 +569,7 @@ class FileSystemClient {
             const fullContent = str.join('\n');
             str = fullContent.split('\n');
             for(let i = 0; i < str.length; i++) {
-                str[i] = '&emsp;' + (i + 1) + ' ' + str[i];
+                str[i] = '&emsp;&emsp;' + (i + 1) + ' ' + str[i];
             }
         } else if (this.hasAll(flags, 'b')) {
             const fullContent = str.join('\n');
@@ -591,14 +577,13 @@ class FileSystemClient {
             let counter = 1;
             for(let i = 0; i < str.length; i++) {
                 if (str[i] != '') {
-                    str[i] = '&emsp;' + counter + ' ' + str[i];
+                    str[i] = '&emsp;&emsp;' + counter + ' ' + str[i];
                     counter++;
                 } else {
                     str[i] = str[i];
                 }
             }
         }
-        console.log(str.join('\n'));
         return str;
     }
 

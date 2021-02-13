@@ -32,32 +32,32 @@ class Parser {
         args.push(elem[0].trim());
         str = str.replace(kw, '');
         elem = str.match(flags);
-        
-        if (elem != null) {
-            for (let i = 0; i < elem.length; i++) {
-                elem[i] = elem[i].trim();
-            }
-            let flagsElem = elem.join('');
-            flagsElem = '-' + flagsElem.split('-').join('');
-            args.push(flagsElem);
-            str = str.replace(flags, '');
-        } else {
-            args.push('-');
-        }
         if (args[0] == 'echo') {
             elem = str.match(re);
             if (elem == null) {
                 throw new Error('Invalid input');
             }
             args.push(elem[0].trim());
+            args.push('-');
             str = str.replace(re, '');
         } else {
+            if (elem != null) {
+                for (let i = 0; i < elem.length; i++) {
+                    elem[i] = elem[i].trim();
+                }
+                let flagsElem = elem.join('');
+                flagsElem = '-' + flagsElem.split('-').join('');
+                args.push(flagsElem);
+                str = str.replace(flags, '');
+            } else {
+                args.push('-');
+            }
             elem = str.match(text);
             if (elem != null) {
                 args.push(elem[0]);
                 str = str.replace(text, '');
             }
-           
+            
             elem = str.match(path);
             if (elem != null) {
                 let string = elem.join('');
@@ -82,6 +82,9 @@ class Parser {
     }
 
     static parseFlags(args: string[], supportedFlagsList:string[]) {
+        if (args[1] == '-help') {
+            return new Set<string>(['-help']);
+        } 
         return new Set<string>(
             args
             .filter(option => option.indexOf('-') === 0)

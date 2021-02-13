@@ -135,6 +135,6 @@ console.log('end')
 // console.log(tmp2);
 
 
-const flags = /\s*-(-help|p|d|r|f|v|c|Q|1|s|S|t|l|E|n|b)+\s*/g;
-const tmp = 'cd --help';
-console.log(tmp.match(flags));
+
+const tmp = ['cd', '-help'];
+console.log(Parser.parseFlags(tmp, ['help']));

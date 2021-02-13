@@ -73,9 +73,6 @@ class Terminal {
                 throw new Error('Invalid input');
             }
         } else if (commandName == 'mkdir') {
-            if (cmd.length != 3) {
-                throw new Error('Invalid input');
-            }
             const flags = Parser.parseFlags(cmd, ['p', '-help']);
             const lastIndex = cmd.length - 1;
             const path = cmd[lastIndex].split(' ');
@@ -84,7 +81,7 @@ class Terminal {
             if (cmd.length != 3) {
                 throw new Error('Invalid input');
             }
-            const content = this.client.echo(cmd[2]);
+            const content = this.client.echo(cmd[1]);
             if (additionalArg.length != 0) {
                 if (additionalArg[0] == '>>') {
                     this.client.cancateOutputInTargetFile(additionalArg[1].split('/'), content);
@@ -95,12 +92,8 @@ class Terminal {
                 }
             } else {
                 str = content;
-                console.log(str);
             }
         } else if (commandName == 'rmdir') {
-            if (cmd.length != 3) {
-                throw new Error('Invalid input');
-            }
             const flags = Parser.parseFlags(cmd, ['p', '-help']);
             const lastIndex = cmd.length - 1;
             const path = cmd[lastIndex].split('/');
@@ -109,7 +102,7 @@ class Terminal {
             const flags = Parser.parseFlags(cmd, ['c', 'd', 'r', '-help']);
             const lastIndex = cmd.length - 1;
             const path = cmd[lastIndex].split(' ');
-            if (cmd.length == 3) {
+            if (cmd.length == 3 || cmd.length == 2) {
                 str = this.client.touch(path, flags)
             } else if (cmd.length == 4) {
                 const param = cmd[2];
@@ -167,11 +160,9 @@ class Terminal {
                 str = content;
             }
         } else if (commandName == 'rm') {
-            if (cmd.length != 3) {
-                throw new Error('Invalid input');
-            }
             const flags = Parser.parseFlags(cmd, ['r', 'f', 'v', 'd', '-help']);
-            const path = cmd[2].split(' ');
+            const lastIndex = cmd.length - 1;
+            const path = cmd[lastIndex].split(' ');
             const content = this.client.rm(path, flags)?.join('\n');
             if (additionalArg.length != 0 && content) {
                 if (additionalArg[0] == '>>') {
@@ -187,9 +178,10 @@ class Terminal {
         } else if (commandName == 'cat') {
             if (cmd.length == 2 && additionalArg.length == 2) {
                 return str;
-            } else if (cmd.length == 3) {
+            } else if (cmd.length == 3 || cmd.length == 2) {
                 const flags = Parser.parseFlags(cmd, ['E', 'n', 'b']);
-                const path = cmd[2].split(' ');
+                const lastIndex = cmd.length - 1;
+                const path = cmd[lastIndex].split(' ');
                 const content = this.client.cat(path, flags).join('\n');
                 if (additionalArg.length != 0) {
                     if (additionalArg[0] == '>>') {
