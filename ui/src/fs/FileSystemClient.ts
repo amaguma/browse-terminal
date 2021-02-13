@@ -498,11 +498,24 @@ class FileSystemClient {
         }
         if (this.hasAll(flags, 'l')) {
             let sum = 0;
+            let maxSizeLen = 0;
+            for (let i = 0; i < elems.length; i++) {
+                const elemLen = elems[i].size.toString().length;
+                if (maxSizeLen < elemLen) {
+                    maxSizeLen = elemLen;
+                }
+            }
+            console.log('maxSize: ' + maxSizeLen)
             for (let i = 0; i < elems.length; i++) {
                 if (elems[i] instanceof FsFile) {
                     sum += elems[i].size;
                 }
                 str[i] = this.collectString(elems[i]) + str[i];
+                const elemLen = elems[i].size.toString().length;
+                for(let j = 0; j < maxSizeLen - elemLen; j++) {
+                    str[i] = '&nbsp;' + str[i];
+                }
+                console.log(str[i]);
             } 
             str.push('total ' + sum);  
         }
@@ -570,7 +583,7 @@ class FileSystemClient {
             const fullContent = str.join('\n');
             str = fullContent.split('\n');
             for(let i = 0; i < str.length; i++) {
-                str[i] = '    ' + (i + 1) + ' ' + str[i];
+                str[i] = '&emsp;' + (i + 1) + ' ' + str[i];
             }
         } else if (this.hasAll(flags, 'b')) {
             const fullContent = str.join('\n');
@@ -578,7 +591,7 @@ class FileSystemClient {
             let counter = 1;
             for(let i = 0; i < str.length; i++) {
                 if (str[i] != '') {
-                    str[i] = '    ' + counter + ' ' + str[i];
+                    str[i] = '&emsp;' + counter + ' ' + str[i];
                     counter++;
                 } else {
                     str[i] = str[i];
