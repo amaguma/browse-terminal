@@ -213,12 +213,20 @@ class Terminal {
             } else {
                 str = content;
             }
+        } else if (commandName == 'clear') {
+            if (cmd.length > 2 || cmd[1] != '-') {
+                throw new Error('Invalid input');
+            }
+        } else {
+            throw new Error('Bad command');
         }
         return str;
     }
 
     commandOutput(line: string) {
         let output: string | undefined;
+        const reCat = /cat >/;
+        const reClear = /clear/;
         try {
             const cmd = Parser.parse(line)
             output = this.runCommand(cmd);
@@ -232,19 +240,23 @@ class Terminal {
                 div.innerHTML = item;
                 this.terminalElem.insertBefore(div, this.workLineElem);
             }
-        } else {
-            const re = /cat >/;
-            if (re.test(line)) {
-                this.inputParam.innerHTML = '';
-                this.divParam =  document.createElement('div');
-                this.divParam.className = 'param__line';
-                this.inputElem.removeEventListener('blur', this.handleMouseUpInputCmd);
-                this.inputParam.addEventListener('blur', this.handleMouseUpInputParam);
-                this.divParam.appendChild(this.inputParam);
-                this.terminalElem.append(this.divParam);
-                this.inputParam.focus();
-            } 
-        } 
+        } else if (reCat.test(line)) {
+            this.inputParam.innerHTML = '';
+            this.divParam =  document.createElement('div');
+            this.divParam.className = 'param__line';
+            this.inputElem.removeEventListener('blur', this.handleMouseUpInputCmd);
+            this.inputParam.addEventListener('blur', this.handleMouseUpInputParam);
+            this.divParam.appendChild(this.inputParam);
+            this.terminalElem.append(this.divParam);
+            this.inputParam.focus();
+        } else if (reClear.test(line)) {
+            while(this.terminalElem.firstChild) {
+                this.terminalElem.removeChild(this.terminalElem.firstChild);
+            }
+            this.terminalElem.appendChild(this.workLineElem);
+            this.isFocus = true;
+            this.inputElem.focus();
+        }
     }
 
     setPath(path: string) {
@@ -283,8 +295,8 @@ class Terminal {
     }
 
     sendCommand(command: string) {
-        const re = /cat >/;
-        if (re.test(command)) {
+        const reCat = /cat >/;
+        if (reCat.test(command)) {
             this.isFocus = false;
         } else {
             this.inputParam.removeEventListener('blur', this.handleMouseUpInputParam);
