@@ -254,6 +254,7 @@ class Terminal {
             const outputCommand = output.split('\n');
             for (const item of outputCommand) {
                 const div = document.createElement('div');
+                div.className = 'output';
                 div.innerHTML = item;
                 this.historyLogElem.appendChild(div);
             }
