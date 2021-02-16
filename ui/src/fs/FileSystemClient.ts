@@ -14,7 +14,8 @@ const enum Comands {
     LS = 'ls [OPTION]... [DIR] - shows directory contents.',
     CAT = 'cat [OPTION]... [FILE]... - print the contents of FILE (s) to standard output.',
     ECHO = 'echo [STRING] - print a string to standard output.',
-    CLEAR = 'clear - clears the window.'
+    CLEAR = 'clear - clears the window.',
+    HELP = 'help - prints list commands.'
 };
 
 class FileSystemClient {
@@ -623,7 +624,8 @@ class FileSystemClient {
             Comands.LS,
             Comands.CAT,
             Comands.ECHO,
-            Comands.CLEAR
+            Comands.CLEAR,
+            Comands.HELP
         ];
         str.map(item => {
             console.log(item);

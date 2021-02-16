@@ -26,6 +26,7 @@ ls [OPTION]... [DIR] - shows directory contents.<br>
 cat [OPTION]... [FILE]... - print the contents of FILE (s) to standard output.<br>
 echo [STRING] - print a string to standard output.<br>
 clear - clears the window.<br>
+help - prints list commands.<br> 
 
 Чтобы узнать больше о каждой команде:<br>
 [command] --help<br>
