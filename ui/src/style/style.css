@@ -32,6 +32,10 @@ body {
     cursor: context-menu;
 }
 
+.work__line.hidden, .input__param.hidden {
+    display: none;
+}
+
 .param__line {
     padding-top: 7px;
 }
@@ -41,7 +45,8 @@ body {
 }
 
 .input__cmd, .input__param {
-    height: 22px;
+    display: block;
+    min-height: 22px;
     min-width: 4em;
     border: none;
     color: white;

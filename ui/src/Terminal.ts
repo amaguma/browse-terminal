@@ -1,30 +1,29 @@
 import {FileSystemClient} from './fs/FileSystemClient';
 import {FileSystemManager} from './fs/FileSystemManager';
-import {Parser, Pair} from './Parser';
-import { ListHistory } from './ListHistory'
+import {Pair, Parser} from './Parser';
+import {ListHistory} from './ListHistory'
 
 class Terminal {
     private client: FileSystemClient;
     private historyCommand: ListHistory<string>;
     private currentHistoryIndex: number;
     private readonly terminalElem: HTMLDivElement;
+    private readonly historyLogElem: HTMLDivElement;
     private readonly workLineElem: HTMLDivElement;
-    private divParam!: HTMLDivElement;
     private readonly pathElem: HTMLSpanElement;
-    private readonly inputElem: HTMLSpanElement;
-    private inputParam: HTMLSpanElement; 
-    private isFocus: boolean;
+    private readonly inputCmdElem: HTMLSpanElement;
+    private readonly inputParamElem: HTMLSpanElement;
 
     constructor(fileSystem: FileSystemManager) {
         this.client = new FileSystemClient(fileSystem);
         this.historyCommand = new ListHistory(15);
         this.terminalElem = document.createElement('div');
+        this.historyLogElem = document.createElement('div');
         this.workLineElem = document.createElement('div');
         this.pathElem = document.createElement('span');
-        this.inputElem = document.createElement('span');
-        this.inputParam = document.createElement('span'); 
+        this.inputCmdElem = document.createElement('span');
+        this.inputParamElem = document.createElement('span');
         this.currentHistoryIndex = this.historyCommand.getLength();
-        this.isFocus = true;
         this.init();
     }
 
@@ -32,28 +31,37 @@ class Terminal {
         this.terminalElem.id = 'terminal';
         this.terminalElem.className = 'container';
 
+        this.historyLogElem.className = 'history__log';
+
         this.workLineElem.className = 'work__line';
         this.workLineElem.innerHTML = '<span class="initial__entry">guest:</span>';
 
         this.pathElem.className = 'path';
         this.setPath('/');
 
-        this.inputElem.className = 'input__cmd';
-        this.inputElem.setAttribute('contenteditable', 'true');
-        this.inputElem.setAttribute('autocorrect', 'off');
-        this.inputElem.setAttribute('autocapitalize', 'none');
-        this.inputElem.setAttribute('autocomplete', 'off');
-        this.inputElem.addEventListener('blur', this.handleMouseUpInputCmd);
+        this.inputCmdElem.className = 'input__cmd';
+        this.inputCmdElem.setAttribute('contenteditable', 'true');
+        this.inputCmdElem.setAttribute('autocorrect', 'off');
+        this.inputCmdElem.setAttribute('autocapitalize', 'none');
+        this.inputCmdElem.setAttribute('autocomplete', 'off');
+        this.inputCmdElem.addEventListener('blur', this.handleInputCmdBlur);
+        this.inputCmdElem.addEventListener('keydown', this.handleInputCmdKeyDown);
 
-        this.inputParam = this.inputElem.cloneNode(true) as HTMLSpanElement;   
-        this.inputParam.className = 'input__param'    
+        this.inputParamElem.classList.add('input__param', 'hidden');
+        this.inputParamElem.setAttribute('contenteditable', 'true');
+        this.inputParamElem.setAttribute('autocorrect', 'off');
+        this.inputParamElem.setAttribute('autocapitalize', 'none');
+        this.inputParamElem.setAttribute('autocomplete', 'off');
+        this.inputParamElem.addEventListener('blur', this.handleInputParamBlur);
+        this.inputParamElem.addEventListener('keydown', this.handleInputParamKeyDown);
 
         this.workLineElem.appendChild(this.pathElem);
-        this.workLineElem.appendChild(this.inputElem);
+        this.workLineElem.appendChild(this.inputCmdElem);
+        this.terminalElem.appendChild(this.historyLogElem);
+        this.terminalElem.appendChild(this.inputParamElem);
         this.terminalElem.appendChild(this.workLineElem);
         document.body.appendChild(this.terminalElem);
-        document.body.addEventListener('keydown', this.handleKeyDown);
-        this.inputElem.focus();
+        this.inputCmdElem.focus();
     }
 
     runCommand(args: Pair<string>): string | undefined {
@@ -224,9 +232,18 @@ class Terminal {
     }
 
     commandOutput(line: string) {
+        if (line.startsWith('cat >')) {
+            this.workLineElem.classList.add('hidden');
+            this.inputParamElem.classList.remove('hidden');
+            this.inputParamElem.setAttribute('command', line);
+            this.inputParamElem.focus();
+            return;
+        }
+        if (line === 'clear') {
+            this.historyLogElem.innerHTML = '';
+            return;
+        }
         let output: string | undefined;
-        const reCat = /cat >/;
-        const reClear = /clear/;
         try {
             const cmd = Parser.parse(line)
             output = this.runCommand(cmd);
@@ -238,24 +255,8 @@ class Terminal {
             for (const item of outputCommand) {
                 const div = document.createElement('div');
                 div.innerHTML = item;
-                this.terminalElem.insertBefore(div, this.workLineElem);
+                this.historyLogElem.appendChild(div);
             }
-        } else if (reCat.test(line)) {
-            this.inputParam.innerHTML = '';
-            this.divParam =  document.createElement('div');
-            this.divParam.className = 'param__line';
-            this.inputElem.removeEventListener('blur', this.handleMouseUpInputCmd);
-            this.inputParam.addEventListener('blur', this.handleMouseUpInputParam);
-            this.divParam.appendChild(this.inputParam);
-            this.terminalElem.append(this.divParam);
-            this.inputParam.focus();
-        } else if (reClear.test(line)) {
-            while(this.terminalElem.firstChild) {
-                this.terminalElem.removeChild(this.terminalElem.firstChild);
-            }
-            this.terminalElem.appendChild(this.workLineElem);
-            this.isFocus = true;
-            this.inputElem.focus();
         }
     }
 
@@ -263,54 +264,45 @@ class Terminal {
         this.pathElem.innerText = `(${path})$`
     }
 
-    handleKeyDown = (event: KeyboardEvent) => {
-        if (event.code == 'Enter' && this.isFocus) {
+    handleInputCmdKeyDown = (event: KeyboardEvent) => {
+        if (event.code == 'Enter') {
             event.preventDefault();
-            this.sendCommand(this.inputElem.innerText.trim());
-            if (this.isFocus) {
-                this.inputElem.innerText = '';
-            }
+            this.sendCommand();
             this.currentHistoryIndex = this.historyCommand.getLength();
-        } else if ((event.code == 'ArrowUp' || event.code == 'ArrowDown') && this.isFocus) {
+        } else if ((event.code == 'ArrowUp' || event.code == 'ArrowDown')) {
             event.preventDefault();
             this.scrollCommand(event.code);
-        } else if (event.ctrlKey && !this.isFocus) {
+        }
+    }
+
+    handleInputParamKeyDown = (event: KeyboardEvent) => {
+        if (event.ctrlKey && event.code === 'KeyD') {
             event.preventDefault();
-            this.sendParam(this.inputParam.innerText.trim(), this.inputElem.innerText.trim());
-            this.isFocus = true;
-            this.inputParam.removeEventListener('blur', this.handleMouseUpInputParam);
-            this.inputElem.addEventListener('blur', this.handleMouseUpInputCmd);
-            this.terminalElem.insertBefore(this.workLineElem.cloneNode(true), this.divParam); // вот тут вставляется не там
-            this.inputElem.innerText = '';
-            this.inputElem.focus();
+            this.sendParam();
+            this.inputParamElem.classList.add('hidden');
+            this.workLineElem.classList.remove('hidden')
+            this.inputCmdElem.focus();
         }
     }
 
-    handleMouseUpInputCmd = () => {
-        this.inputElem.focus();
+    handleInputCmdBlur = () => {
+        this.inputCmdElem.focus();
     }
 
-    handleMouseUpInputParam = () => {
-        this.inputParam.focus();
+    handleInputParamBlur = () => {
+        this.inputParamElem.focus();
     }
 
-    sendCommand(command: string) {
-        const reCat = /cat >/;
-        if (reCat.test(command)) {
-            this.isFocus = false;
-        } else {
-            this.inputParam.removeEventListener('blur', this.handleMouseUpInputParam);
-            this.inputElem.addEventListener('blur', this.handleMouseUpInputCmd);
-            this.terminalElem.insertBefore(this.workLineElem.cloneNode(true), this.workLineElem);
-            this.inputElem.focus();
-            this.isFocus = true;
-        }
+    sendCommand() {
+        const command = this.inputCmdElem.innerText.trim();
+        this.historyLogElem.appendChild(this.workLineElem.cloneNode(true));
         if (command != '') {
             this.historyCommand.add(command);
             this.commandOutput(command);
         }
         const path = this.client.pwd(new Set<string>([])) == '/home' ? '/' : this.client.pwd(new Set<string>([])).slice(5);
         this.setPath(path);
+        this.inputCmdElem.innerText = '';
     }
 
     scrollCommand(str: string) {
@@ -323,9 +315,9 @@ class Terminal {
             if (this.currentHistoryIndex < 0) {
                 this.currentHistoryIndex = 0;
             }
-            this.inputElem.innerText = this.historyCommand.getElem(this.currentHistoryIndex);
+            this.inputCmdElem.innerText = this.historyCommand.getElem(this.currentHistoryIndex);
             const range = document.createRange();
-            range.selectNodeContents(this.inputElem);
+            range.selectNodeContents(this.inputCmdElem);
             range.collapse(false);
             const sel = window.getSelection();
             if (sel == null) {
@@ -337,29 +329,35 @@ class Terminal {
             this.currentHistoryIndex++;
             if (this.currentHistoryIndex > this.historyCommand.getLength() - 1) {
                 this.currentHistoryIndex = this.historyCommand.getLength();
-                this.inputElem.innerText = '';
+                this.inputCmdElem.innerText = '';
             } else {
-                this.inputElem.innerText = this.historyCommand.getElem(this.currentHistoryIndex);
+                this.inputCmdElem.innerText = this.historyCommand.getElem(this.currentHistoryIndex);
             }
         }
     }
 
-    sendParam(str: string, cmd: string) {
-        const index = cmd.indexOf('>');
-        cmd = cmd.slice(index);
-        cmd = cmd.trim()
-        const re = />/g;
-        const counter = cmd.match(re);
-        const elems = cmd.split(' ');
-        for (let i = 0; i < 2; i++) {
-            elems[i] = elems[i].trim();
+    sendParam() {
+        const str = this.inputParamElem.innerText.trim();
+        this.historyLogElem.appendChild(this.inputParamElem.cloneNode(true));
+        let cmd = this.inputParamElem.getAttribute('command');
+        if (cmd) {
+            const index = cmd.indexOf('>');
+            cmd = cmd.slice(index);
+            cmd = cmd.trim()
+            const re = />/g;
+            const counter = cmd.match(re);
+            const elems = cmd.split(' ');
+            for (let i = 0; i < 2; i++) {
+                elems[i] = elems[i].trim();
+            }
+            if (counter?.length == 1) {
+                this.client.setOutputInTargetFile(elems[1].split('/'), str)
+            } else if (counter?.length == 2) {
+                this.client.cancateOutputInTargetFile(elems[1].split('/'), str)
+            }
         }
-        if (counter?.length == 1) {
-            this.client.setOutputInTargetFile(elems[1].split('/'), str)
-        } else if (counter?.length == 2) {
-            this.client.cancateOutputInTargetFile(elems[1].split('/'), str)
-        }
+        this.inputParamElem.innerText = '';
     }
 }
 
-export { Terminal }
+export {Terminal}
