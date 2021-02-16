@@ -13,7 +13,8 @@ const enum Comands {
     RM = 'rm [OPTION]... [FILE]... - removes directory or file.',
     LS = 'ls [OPTION]... [DIR] - shows directory contents.',
     CAT = 'cat [OPTION]... [FILE]... - print the contents of FILE (s) to standard output.',
-    ECHO = 'echo [STRING] - print a string to standard output.'
+    ECHO = 'echo [STRING] - print a string to standard output.',
+    CLEAR = 'clear - clears the window.'
 };
 
 class FileSystemClient {
@@ -621,7 +622,8 @@ class FileSystemClient {
             Comands.RM,
             Comands.LS,
             Comands.CAT,
-            Comands.ECHO
+            Comands.ECHO,
+            Comands.CLEAR
         ];
         str.map(item => {
             console.log(item);

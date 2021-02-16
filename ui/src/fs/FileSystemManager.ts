@@ -1,4 +1,4 @@
-import { FsDir, FS_ROOT_NAME } from './FsDir';
+import { FileSystemUnitType, FsDir, FS_ROOT_NAME } from './FsDir';
 import { FsFile } from './FsFile';
 import { ListHistory } from '../ListHistory'
 
@@ -56,9 +56,9 @@ class FileSystemManager {
         if (!(parentDir instanceof FsDir)) {
             throw new Error('Should be directory');
         }
-        // if (!(parentDir.checkUnit(unit))) {
-        //     throw new Error('Element already exists');
-        // }
+        if (!(parentDir.checkUnit(unit.name, FileSystemUnitType.DIR))) {
+            throw new Error('Element already exists');
+        }
         parentDir.add(unit);
         if (unit instanceof FsDir) {
             this.fileSystem.set(unit, unit.content);
@@ -74,9 +74,9 @@ class FileSystemManager {
         if (!(parentDir instanceof FsDir)) {
             throw new Error('Should be directory');
         }
-        // if (parentDir.checkUnit(unit)) {
-        //     throw new Error('Element not found');
-        // }
+        if (parentDir.checkUnit(unit.name, FileSystemUnitType.DIR)) {
+            throw new Error('Element not found');
+        }
         parentDir.content.splice(parentDir.content.indexOf(unit), 1);
         if (unit instanceof FsDir) {
             this.fileSystem.delete(unit);

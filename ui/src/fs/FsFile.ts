@@ -1,10 +1,6 @@
 
-import { FsDir } from "./FsDir";
+import { FsDir, FileSystemUnitType } from "./FsDir";
 
-export const enum FileSystemUnitType {
-    FILE = 'FILE',
-    DIR = 'DIR',
-};
 
 class FsFile {
     private _content: string;
