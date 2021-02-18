@@ -1,8 +1,8 @@
 
-import { FileSystem } from "./FileSystem";
-import { FileSystemUnitType, FsDir } from "./FsDir";
-import { FsFile } from "./FsFile";
-import { Parser } from "../Parser"
+import { FileSystem } from "./fs/FileSystem";
+import { FileSystemUnitType, FsDir } from "./fs/FsDir";
+import { FsFile } from "./fs/FsFile";
+import { Parser } from "./Parser"
 
 const enum CommandHelp {
     CD = 'cd [DIR] - changes the current folder.',

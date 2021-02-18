@@ -1,4 +1,4 @@
-import {Commands} from './fs/Commands';
+import {Commands} from './Commands';
 import {FileSystem} from './fs/FileSystem';
 import {Pair, Parser} from './Parser';
 import {ListHistory} from './ListHistory'
