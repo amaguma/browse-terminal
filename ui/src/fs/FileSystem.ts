@@ -2,7 +2,7 @@ import { FileSystemUnitType, FsDir, FS_ROOT_NAME } from './FsDir';
 import { FsFile } from './FsFile';
 import { ListHistory } from '../ListHistory'
 
-class FileSystemManager {
+class FileSystem {
     public fileSystem: Map<FsDir, Array<FsDir | FsFile>>;
     private root: FsDir;
     public historyDir: ListHistory<FsDir>;
@@ -106,4 +106,4 @@ class FileSystemManager {
     }
 }
 
-export { FileSystemManager };
+export { FileSystem };

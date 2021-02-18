@@ -1,10 +1,10 @@
 
-import { FileSystemManager } from "./FileSystemManager";
+import { FileSystem } from "./FileSystem";
 import { FileSystemUnitType, FsDir } from "./FsDir";
 import { FsFile } from "./FsFile";
 import { Parser } from "../Parser"
 
-const enum Comands {
+const enum CommandHelp {
     CD = 'cd [DIR] - changes the current folder.',
     MKDIR = 'mkdir [OPTION] [DIR]... - creates a directory.',
     RMDIR = 'rmdir [OPTION] [DIR] - removes a directory if it is empty.',
@@ -18,12 +18,12 @@ const enum Comands {
     HELP = 'help - prints list commands.'
 };
 
-class FileSystemClient {
-    private home: FileSystemManager;
+class Commands {
+    private fileSystem: FileSystem;
     private pointer: FsDir;
     
-    constructor(home: FileSystemManager) {
-        this.home = home;
+    constructor(home: FileSystem) {
+        this.fileSystem = home;
         this.pointer = home.getRoot();
     }
 
@@ -39,20 +39,20 @@ class FileSystemClient {
         }
         if (pathTo.length > 0) {
             if (pathTo.length == 1 && pathTo[0] == '-') {
-                this.pointer = this.home.historyDir.getElem(0);
+                this.pointer = this.fileSystem.historyDir.getElem(0);
             } else {
                 let childDir: FsDir | FsFile | undefined;
                 let position = 0;
                 do {
                     if (pathTo[position] == '..') {
-                        if (this.pointer == this.home.getRoot()) {
-                            this.pointer == this.home.getRoot();
+                        if (this.pointer == this.fileSystem.getRoot()) {
+                            this.pointer == this.fileSystem.getRoot();
                         } else {
                             this.pointer = this.pointer.parentDir;
                         }
                     } else {
                         if (pathTo[position] == 'home' && position == 0) {
-                            this.pointer = this.home.getRoot();
+                            this.pointer = this.fileSystem.getRoot();
                         } else {
                             childDir = this.pointer.get(pathTo[position]);
                             if (!childDir) {
@@ -70,9 +70,9 @@ class FileSystemClient {
                 } while (position < pathTo.length);
             }
         } else {
-            this.pointer = this.home.getRoot();
+            this.pointer = this.fileSystem.getRoot();
         }
-        this.home.historyDir.add(this.pointer);
+        this.fileSystem.historyDir.add(this.pointer);
     }
 
     mkdir(path: string[], flags: Set<string>): string | undefined {
@@ -243,7 +243,7 @@ class FileSystemClient {
                     '--help display this help';
             return str;
         } else if (flags.size == 0) {
-            while(this.pointer != this.home.getRoot()) {
+            while(this.pointer != this.fileSystem.getRoot()) {
                 elemOfPath.push(this.pointer.name);
                 this.pointer = this.pointer.parentDir;
             }
@@ -615,17 +615,17 @@ class FileSystemClient {
 
     help() {
         const str = [
-            Comands.CD,
-            Comands.MKDIR,
-            Comands.RMDIR,
-            Comands.TOUCH,
-            Comands.PWD,
-            Comands.RM,
-            Comands.LS,
-            Comands.CAT,
-            Comands.ECHO,
-            Comands.CLEAR,
-            Comands.HELP
+            CommandHelp.CD,
+            CommandHelp.MKDIR,
+            CommandHelp.RMDIR,
+            CommandHelp.TOUCH,
+            CommandHelp.PWD,
+            CommandHelp.RM,
+            CommandHelp.LS,
+            CommandHelp.CAT,
+            CommandHelp.ECHO,
+            CommandHelp.CLEAR,
+            CommandHelp.HELP
         ];
         str.map(item => {
             console.log(item);
@@ -867,4 +867,4 @@ class FileSystemClient {
     }
 }
 
-export { FileSystemClient }
+export { Commands }

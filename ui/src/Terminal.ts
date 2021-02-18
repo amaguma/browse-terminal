@@ -1,10 +1,10 @@
-import {FileSystemClient} from './fs/FileSystemClient';
-import {FileSystemManager} from './fs/FileSystemManager';
+import {Commands} from './fs/Commands';
+import {FileSystem} from './fs/FileSystem';
 import {Pair, Parser} from './Parser';
 import {ListHistory} from './ListHistory'
 
 class Terminal {
-    private client: FileSystemClient;
+    private client: Commands;
     private historyCommand: ListHistory<string>;
     private currentHistoryIndex: number;
     private readonly terminalElem: HTMLDivElement;
@@ -14,8 +14,8 @@ class Terminal {
     private readonly inputCmdElem: HTMLSpanElement;
     private readonly inputParamElem: HTMLSpanElement;
 
-    constructor(fileSystem: FileSystemManager) {
-        this.client = new FileSystemClient(fileSystem);
+    constructor(fileSystem: FileSystem) {
+        this.client = new Commands(fileSystem);
         this.historyCommand = new ListHistory(15);
         this.terminalElem = document.createElement('div');
         this.historyLogElem = document.createElement('div');

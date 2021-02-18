@@ -1,4 +1,4 @@
-import {FileSystemManager} from './fs/FileSystemManager';
+import {FileSystem} from './fs/FileSystem';
 import {FsFile} from './fs/FsFile';
 import {Parser} from './Parser';
 import {Terminal} from './Terminal';
@@ -6,7 +6,7 @@ import { FsDir } from './fs/FsDir';
 import './style/style.css';
 
 
-var initialFilesystem = new FileSystemManager();
+var initialFilesystem = new FileSystem();
 
 initialFilesystem.addUnit([], new FsFile('help.txt', 'cd [DIR] - changes the current folder.\n' +
     'mkdir [OPTION] [DIR]... - creates a directory.\n' +
