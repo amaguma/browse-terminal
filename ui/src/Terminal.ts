@@ -4,15 +4,15 @@ import {Pair, Parser} from './Parser';
 import {ListHistory} from './ListHistory'
 
 class Terminal {
-    private client: Commands;
-    private historyCommand: ListHistory<string>;
+    private client: Commands; // командная оболочка.
+    private historyCommand: ListHistory<string>; // история команд.
     private currentHistoryIndex: number;
-    private readonly terminalElem: HTMLDivElement;
-    private readonly historyLogElem: HTMLDivElement;
-    private readonly workLineElem: HTMLDivElement;
-    private readonly pathElem: HTMLSpanElement;
-    private readonly inputCmdElem: HTMLSpanElement;
-    private readonly inputParamElem: HTMLSpanElement;
+    private readonly terminalElem: HTMLDivElement; // окно терминала.
+    private readonly historyLogElem: HTMLDivElement; // div объект, в котором все предыдущие.
+    private readonly workLineElem: HTMLDivElement; // строка приглашения.
+    private readonly pathElem: HTMLSpanElement; // span объект, в котором указан путь до текущей директории.
+    private readonly inputCmdElem: HTMLSpanElement; // окно для ввода команды.
+    private readonly inputParamElem: HTMLSpanElement; // окно для ввода текста. 
 
     constructor(fileSystem: FileSystem) {
         this.client = new Commands(fileSystem);
@@ -296,13 +296,13 @@ class Terminal {
 
     sendCommand() {
         const command = this.inputCmdElem.innerText.trim();
-        this.historyLogElem.appendChild(this.workLineElem.cloneNode(true));
+        this.historyLogElem.appendChild(this.workLineElem.cloneNode(true));  // добавление в браузер приглашение для ввода.
         if (command != '') {
-            this.historyCommand.add(command);
-            this.commandOutput(command);
+            this.historyCommand.add(command); // добавление команды в историю команд.
+            this.commandOutput(command); 
         }
         const path = this.client.pwd(new Set<string>([])) == '/home' ? '/' : this.client.pwd(new Set<string>([])).slice(5);
-        this.setPath(path);
+        this.setPath(path); // добавление пути до текущей дирректории в приглашение для ввода.
         this.inputCmdElem.innerText = '';
     }
 

@@ -22,15 +22,31 @@ initialFilesystem.addUnit([], new FsFile('help.txt', 'cd [DIR] - changes the cur
 initialFilesystem.addUnit([], new FsDir('programs'));
 
 initialFilesystem.addUnit([], new FsDir('Downloads'));
+initialFilesystem.addUnit(['Downloads'], new FsFile('tmp.txt', 'Просто какой-то файл'));
+initialFilesystem.addUnit(['Downloads'], new FsFile('doc.txt', 'В ту ночь когда рождались волки'));
 
 initialFilesystem.addUnit([], new FsDir('uni_study'));
 
-initialFilesystem.addUnit(['programs'], new FsDir('dir1'));
+initialFilesystem.addUnit(['uni_study'], new FsDir('database'));
+initialFilesystem.addUnit(['uni_study','database'], new FsDir('lab1'));
+initialFilesystem.addUnit(['uni_study','database', 'lab1'], new FsFile('lab1.docx', 'ER-схема'));
+initialFilesystem.addUnit(['uni_study','database'], new FsFile('lab2.docx', '1.	Создать модель семантических объектов для предметной области, выбранной в лабораторной работе №1.'));
 
-initialFilesystem.addUnit(['programs'], new FsFile('doc.txt', 'В ту ночь когда рождались волки'));
+initialFilesystem.addUnit(['uni_study'], new FsDir('kursach'));
+initialFilesystem.addUnit(['uni_study','kursach'], new FsFile('zapiska.docx', 'Разработка универсальной имитации терминала Linux в браузере'));
+
+initialFilesystem.addUnit(['uni_study'], new FsDir('java'));
+initialFilesystem.addUnit(['uni_study','java'], new FsFile('lab1.docx', 'Отчет по первой лабораторной работе'));
+
+initialFilesystem.addUnit(['programs'], new FsDir('Visual Studio'));
+initialFilesystem.addUnit(['programs', 'Visual Studio'], new FsFile('README.txt', 'Самая лучшая среда разработки'));
+
+initialFilesystem.addUnit([], new FsDir('bin'));
+
+initialFilesystem.addUnit(['bin'], new FsFile('log.txt', 'webpack 5.23.0 compiled successfully in 179 ms\ni ｢wdm｣: Compiled successfully.'));
 
 var terminal = new Terminal(initialFilesystem);
-let cmd = 'touch file.txt';
+let cmd = 'echo abc >> file.txt';
 const elem = Parser.parse(cmd);
 terminal.runCommand(elem);
 

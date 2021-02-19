@@ -43,24 +43,28 @@ class FsFile {
         return this._size;
     }
 
+    /* Когда пользователь использует ">", 
+    содержимое файла должно перезаписаться. */
     setContent(content: string) {
         this._content = content;
         this.setSize(this._content)
     }
-
+    
+    /* Когда пользователь использует ">>", 
+    должна произойти конкантенация содержимого и введенного. */
     concatContent(content: string) {
         const str = this._content.concat(content);
         this._content = str;
         this.setSize(this._content)
     }
 
+    /* Обновление времени последней модификации. */
     updateLastMode(param?: string) {
         if (param) {
             this.lastmod = new Date(param);
         } else {
             this.lastmod = new Date();
-        }
-        
+        } 
     }
 
     setParentDir(parrentDir: FsDir){

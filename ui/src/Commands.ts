@@ -3,6 +3,7 @@ import { FileSystem } from "./fs/FileSystem";
 import { FileSystemUnitType, FsDir } from "./fs/FsDir";
 import { FsFile } from "./fs/FsFile";
 import { Parser } from "./Parser"
+import { ListHistory } from "./ListHistory"
 
 const enum CommandHelp {
     CD = 'cd [DIR] - changes the current folder.',
@@ -19,12 +20,15 @@ const enum CommandHelp {
 };
 
 class Commands {
-    private fileSystem: FileSystem;
-    private pointer: FsDir;
+    private fileSystem: FileSystem; // файловая система.
+    private pointer: FsDir; // текущая директория.
+    private historyDir: ListHistory<FsDir>; // история посещенных директорий.
     
-    constructor(home: FileSystem) {
-        this.fileSystem = home;
-        this.pointer = home.getRoot();
+    constructor(fileSystem: FileSystem) {
+        this.fileSystem = fileSystem;
+        this.pointer = fileSystem.getRoot(); // выставление текущей директории в корне.
+        this.historyDir = new ListHistory(2); // инициализация истории директорий.
+        this.historyDir.add(fileSystem.getRoot()); // добавление текущей директории (корня) в историю.
     }
 
     cd(pathTo: string[], flags: Set<string>): string | undefined {
@@ -39,7 +43,7 @@ class Commands {
         }
         if (pathTo.length > 0) {
             if (pathTo.length == 1 && pathTo[0] == '-') {
-                this.pointer = this.fileSystem.historyDir.getElem(0);
+                this.pointer = this.historyDir.getElem(0);
             } else {
                 let childDir: FsDir | FsFile | undefined;
                 let position = 0;
@@ -72,7 +76,7 @@ class Commands {
         } else {
             this.pointer = this.fileSystem.getRoot();
         }
-        this.fileSystem.historyDir.add(this.pointer);
+        this.historyDir.add(this.pointer);
     }
 
     mkdir(path: string[], flags: Set<string>): string | undefined {

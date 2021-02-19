@@ -1,16 +1,12 @@
 import { FileSystemUnitType, FsDir, FS_ROOT_NAME } from './FsDir';
 import { FsFile } from './FsFile';
-import { ListHistory } from '../ListHistory'
 
 class FileSystem {
-    public fileSystem: Map<FsDir, Array<FsDir | FsFile>>;
-    private root: FsDir;
-    public historyDir: ListHistory<FsDir>;
+    private fileSystem: Map<FsDir, Array<FsDir | FsFile>>;
+    private root: FsDir; // корень дерева.
 
     constructor() {
         this.root = new FsDir(FS_ROOT_NAME);
-        this.historyDir = new ListHistory(2);
-        this.historyDir.add(this.root);
         this.fileSystem = new Map();
         this.fileSystem.set(this.root, this.root.content);
     }
