@@ -460,14 +460,10 @@ class Commands {
                     '--help display this help'];
             return strHelp;
         } 
-        if (this.pointer.content.length == 0) {
-            str.push('&nbsp;');
-        } else {
-            this.pointer.content.map(item => {
-                elems.push(item);
-                str.push(item.name);
-            });
-        }
+        this.pointer.content.map(item => {
+            elems.push(item);
+            str.push(item.name);
+        });
         if (this.hasAll(flags, 'Q')) {
             for (let i = 0; i < str.length; i++) {
                 str[i] = '"' + str[i] + '"';
@@ -535,9 +531,9 @@ class Commands {
                 str.unshift(sumElem)
             }
         }
-        str.map(item => {
-            console.log(item);
-        });
+        // str.map(item => {
+        //     console.log(item);
+        // });
         this.pointer = currentDir;
         return str;
     }
@@ -635,6 +631,10 @@ class Commands {
             console.log(item);
         })
         return str;
+    }
+
+    getPointer() {
+        return this.pointer;
     }
 
     private getContentInSourceFile(source: string[][], str: string[], index: number) {

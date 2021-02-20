@@ -46,7 +46,7 @@ initialFilesystem.addUnit([], new FsDir('bin'));
 initialFilesystem.addUnit(['bin'], new FsFile('log.txt', 'webpack 5.23.0 compiled successfully in 179 ms\ni ｢wdm｣: Compiled successfully.'));
 
 var terminal = new Terminal(initialFilesystem);
-let cmd = 'echo abc >> file.txt';
+let cmd = 'echo help >> help.txt';
 const elem = Parser.parse(cmd);
 terminal.runCommand(elem);
 
